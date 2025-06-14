@@ -2,154 +2,83 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { DashboardHeader } from "@/components/dashboard-header"
+import { PlusCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { DashboardShell } from "@/components/dashboard-shell"
-import { ProductsOverview } from "@/components/products-overview"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowDown, ArrowUp, DollarSign, Package, ShoppingCart, Users } from "lucide-react"
+import { DashboardHeader } from "@/components/dashboard-header"
+import { ProductsTable } from "@/components/products-table"
 import { api } from "@/lib/api"
 
 interface Shop {
   id: number
   name: string
+  domain: string
 }
 
 interface User {
   id: number
   email: string
-  full_name: string
+  shops: Shop[]
+}
+
+interface ApiResponse {
+  data: {
+    user: User
+  }
 }
 
 export default function ShopDashboardPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [shop, setShop] = useState<Shop | null>(null)
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(true)
+  const shopId = parseInt(params.id)
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        router.push("/auth/login")
-        return
-      }
-
       try {
         const response = await api.getCurrentUser()
-        if (response.error) {
-          throw new Error(response.error)
+        const userData = (response as ApiResponse).data.user
+        const userShop = userData.shops.find((s) => s.id === shopId)
+
+        if (!userShop) {
+          router.push("/dashboard")
+          return
         }
 
-        if (response.data?.user) {
-          setUser(response.data.user)
-          // Find the shop that matches the ID from the URL
-          const shopId = parseInt(params.id)
-          const userShop = response.data.shops.find((s: Shop) => s.id === shopId)
-          if (userShop) {
-            setShop(userShop)
-          } else {
-            throw new Error("Shop not found")
-          }
-        }
-      } catch (err) {
-        setError("Failed to load user data")
+        setShop(userShop)
+      } catch (error) {
+        console.error("Error checking auth:", error)
         router.push("/auth/login")
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
     checkAuth()
-  }, [router, params.id])
+  }, [router, shopId])
 
-  if (isLoading) {
+  if (loading) {
     return <div>Loading...</div>
   }
 
-  if (error) {
-    return <div>{error}</div>
-  }
-
-  if (!shop || !user) {
+  if (!shop) {
     return null
   }
 
   return (
-    <DashboardShell>
-      <DashboardHeader 
-        heading={`${shop.name} Dashboard`} 
-        text={`Welcome back, ${user.full_name}!`} 
-      />
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$0.00</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-500 inline-flex items-center">
-                <ArrowUp className="mr-1 h-3 w-3" />
-                0%
-              </span>{" "}
-              from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-500 inline-flex items-center">
-                <ArrowUp className="mr-1 h-3 w-3" />
-                0%
-              </span>{" "}
-              from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Orders</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-red-500 inline-flex items-center">
-                <ArrowDown className="mr-1 h-3 w-3" />
-                0%
-              </span>{" "}
-              from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Customers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-500 inline-flex items-center">
-                <ArrowUp className="mr-1 h-3 w-3" />
-                0%
-              </span>{" "}
-              from last month
-            </p>
-          </CardContent>
-        </Card>
+    <DashboardShell shopId={shopId}>
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <DashboardHeader
+          heading="Products"
+          text="Create and manage your products."
+        >
+          <Button onClick={() => router.push(`/shop/${shopId}/products/new`)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
+        </DashboardHeader>
+        <ProductsTable shopId={shopId} />
       </div>
-
-      <ProductsOverview />
     </DashboardShell>
   )
 } 

@@ -78,9 +78,10 @@ function SaveButton({ isSubmitting, isEditing }: { isSubmitting: boolean; isEdit
 // Define the props for the ProductForm component
 interface ProductFormProps {
   initialData?: any
+  shopId: number
 }
 
-export function ProductForm({ initialData }: ProductFormProps = {}) {
+export function ProductForm({ initialData, shopId }: ProductFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -305,110 +306,49 @@ export function ProductForm({ initialData }: ProductFormProps = {}) {
     setSubmitError(null)
 
     try {
-      // Format option types to match backend structure
-      const formattedOptions = options
-        .filter((option) => option.type && option.values.some((v) => v.trim() !== ""))
-        .map((option) => {
-          // Format values as objects with value and _destroy properties
-          const formattedValues = option.values
-            .filter((v: string) => v.trim() !== "")
-            .map((value: string) => ({
-              value: value,
-              _destroy: false,
-            }))
-
-          return {
-            name: option.type,
-            values: formattedValues,
-            position: 1, // Add position since it's in the permitted params
-          }
-        })
-
-      // Format variants to match backend structure
-      const formattedVariants = variants.map((variant) => {
-        // Map option values to option1, option2, option3
-        const variantOptions: { [key: string]: string | null } = {
-          option1: null,
-          option2: null,
-          option3: null,
-        }
-
-        variant.options.forEach((opt: any, i: number) => {
-          if (i < 3) {
-            variantOptions[`option${i + 1}`] = opt.value
-          }
-        })
-
-        // Include the variant ID if it exists (for editing)
-        const variantData: any = {
-          sku: variant.sku || `${data.sku}-${variant.title.replace(/\s+/g, "-")}`,
-          price: variant.price || data.price,
-          quantity: variant.inventory || 0,
-          ...variantOptions,
-        }
-
-        // Add ID if this is an existing variant
-        if (variant.id) {
-          // Convert id to string to safely check if it starts with specific prefixes
-          const variantIdStr = String(variant.id)
-          if (!variantIdStr.startsWith("new-") && !variantIdStr.startsWith("manual-")) {
-            variantData.id = variant.id
-          }
-        }
-
-        return variantData
-      })
-
-      // Prepare the complete payload
-      const payload = {
-        product: {
-          ...data,
-          option_types_attributes: formattedOptions,
-          variants_attributes: formattedVariants,
-        },
-      }
-
-      console.log("Submitting data:", payload)
-
-      // Determine the API endpoint and method based on whether we're creating or updating
       const url = isEditing
-        ? `http://127.0.0.1:3000/api/v1/products/${initialData.id}`
-        : "http://127.0.0.1:3000/api/v1/products"
+        ? `http://127.0.0.1:3000/api/v1/shops/${shopId}/products/${initialData.id}`
+        : `http://127.0.0.1:3000/api/v1/shops/${shopId}/products`
 
       const method = isEditing ? "PUT" : "POST"
 
-      // Send the data to the API
       const response = await fetch(url, {
-        method: method,
+        method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          product: {
+            ...data,
+            option_types: options,
+            variants: variants,
+          },
+        }),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || `Failed to ${isEditing ? "update" : "create"} product`)
+        throw new Error(errorData.error || "Failed to save product")
       }
 
       const result = await response.json()
 
       toast({
-        title: isEditing ? "Product updated successfully" : "Product created successfully",
-        description: `Product "${data.title}" has been ${isEditing ? "updated" : "created"}.`,
+        title: isEditing ? "Product Updated" : "Product Created",
+        description: isEditing
+          ? "Your product has been updated successfully."
+          : "Your product has been created successfully.",
       })
 
-      // Log the result and redirect to the products page
-      console.log(isEditing ? "Product updated:" : "Product created:", result)
-      router.push("/dashboard/products")
+      // Redirect to the products list
+      router.push(`/shop/${shopId}/products`)
     } catch (error) {
-      console.error(isEditing ? "Error updating product:" : "Error creating product:", error)
+      console.error("Error saving product:", error)
       setSubmitError(error instanceof Error ? error.message : "An unknown error occurred")
-
       toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save product",
         variant: "destructive",
-        title: isEditing ? "Failed to update product" : "Failed to create product",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
       })
     } finally {
       setIsSubmitting(false)

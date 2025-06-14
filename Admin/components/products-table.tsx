@@ -59,7 +59,11 @@ interface Product {
   variants: ProductVariant[]
 }
 
-export function ProductsTable() {
+interface ProductsTableProps {
+  shopId: number
+}
+
+export function ProductsTable({ shopId }: ProductsTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -80,7 +84,7 @@ export function ProductsTable() {
       setError(null)
 
       try {
-        const response = await fetch("http://127.0.0.1:3000/api/v1/products")
+        const response = await fetch(`http://127.0.0.1:3000/api/v1/shops/${shopId}/products`)
 
         if (!response.ok) {
           throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`)
@@ -105,7 +109,7 @@ export function ProductsTable() {
     }
 
     fetchProducts()
-  }, [])
+  }, [shopId])
 
   // Filter products based on search query and filters
   const filteredProducts = products.filter((product) => {
@@ -197,7 +201,7 @@ export function ProductsTable() {
   const deleteProduct = async (product: Product) => {
     setIsDeleting(true)
     try {
-      const response = await fetch(`http://127.0.0.1:3000/api/v1/products/${product.id}`, {
+      const response = await fetch(`http://127.0.0.1:3000/api/v1/shops/${shopId}/products/${product.id}`, {
         method: "DELETE",
       })
 
@@ -205,19 +209,17 @@ export function ProductsTable() {
         throw new Error(`Failed to delete product: ${response.status} ${response.statusText}`)
       }
 
-      // Remove the product from the local state
-      setProducts(products.filter((p) => p.id !== product.id))
-
+      setProducts((prevProducts) => prevProducts.filter((p) => p.id !== product.id))
       toast({
-        title: "Product deleted",
-        description: `"${product.title}" has been deleted successfully.`,
+        title: "Success",
+        description: "Product deleted successfully",
       })
     } catch (err) {
       console.error("Error deleting product:", err)
       toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to delete product",
         variant: "destructive",
-        title: "Failed to delete product",
-        description: err instanceof Error ? err.message : "An unknown error occurred",
       })
     } finally {
       setIsDeleting(false)

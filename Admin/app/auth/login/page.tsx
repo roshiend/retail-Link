@@ -11,6 +11,19 @@ import { Eye, EyeOff } from "lucide-react"
 import { AuthHeader } from "../components/auth-header"
 import { api } from "@/lib/api"
 
+interface LoginResponse {
+  user: {
+    id: number
+    email: string
+    full_name: string
+    shop: {
+      id: number
+      name: string
+    }
+  }
+  token: string
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
@@ -26,19 +39,28 @@ export default function LoginPage() {
     const email = formData.get("email") as string
     const password = formData.get("password") as string
 
-    const response = await api.login({ email, password })
+    try {
+      const response = await api.login({ email, password })
 
-    if (response.error) {
-      setError(response.error)
-      setIsLoading(false)
-      return
-    }
+      if (response.error) {
+        setError(response.error)
+        return
+      }
 
-    if (response.data?.token) {
+      if (!response.data?.token || !response.data?.user?.shop?.id) {
+        setError("Invalid response from server")
+        return
+      }
+
       // Store the token
       localStorage.setItem("token", response.data.token)
+      
       // Redirect to shop dashboard
-      router.push(`/shop/${response.data.shop.id}/dashboard`)
+      router.push(`/shop/${response.data.user.shop.id}/dashboard`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred")
+    } finally {
+      setIsLoading(false)
     }
   }
 

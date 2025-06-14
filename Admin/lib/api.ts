@@ -1,5 +1,22 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
+interface Shop {
+  id: number;
+  name: string;
+  role?: string;
+}
+
+interface User {
+  id: number;
+  email: string;
+  full_name: string;
+  shops: Shop[];
+  shop?: {
+    id: number;
+    name: string;
+  };
+}
+
 interface LoginCredentials {
   email: string;
   password: string;
@@ -19,18 +36,16 @@ interface ApiResponse<T> {
 }
 
 export const api = {
-  async login(credentials: LoginCredentials): Promise<ApiResponse<{ token: string; user: any }>> {
+  async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
       console.log('Attempting login to:', `${API_BASE_URL}/login`);
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(credentials),
-        credentials: 'include',
+        body: JSON.stringify(credentials)
       });
 
       if (!response.ok) {
@@ -47,18 +62,16 @@ export const api = {
     }
   },
 
-  async signup(data: SignupData): Promise<ApiResponse<{ user: any; token: string }>> {
+  async signup(data: SignupData): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
       console.log('Attempting signup to:', `${API_BASE_URL}/signup`);
       const response = await fetch(`${API_BASE_URL}/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(data),
-        credentials: 'include',
+        body: JSON.stringify(data)
       });
 
       if (!response.ok) {
@@ -75,18 +88,26 @@ export const api = {
     }
   },
 
-  async getCurrentUser(token: string): Promise<ApiResponse<{ user: any }>> {
+  async getCurrentUser(): Promise<ApiResponse<{ user: User }>> {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       const response = await fetch(`${API_BASE_URL}/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        credentials: 'include',
+          'Accept': 'application/json'
+        }
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          // Clear invalid token
+          localStorage.removeItem('token');
+          throw new Error('Session expired. Please login again.');
+        }
         const errorText = await response.text();
         console.error('Get current user error response:', errorText);
         throw new Error(errorText || 'Failed to fetch user data');
@@ -100,18 +121,16 @@ export const api = {
     }
   },
 
-  async createShop(token: string, name: string): Promise<ApiResponse<{ shop: any }>> {
+  async createShop(token: string, name: string): Promise<ApiResponse<{ shop: Shop }>> {
     try {
       const response = await fetch(`${API_BASE_URL}/shops`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({ name }),
-        credentials: 'include',
+        body: JSON.stringify({ name })
       });
 
       if (!response.ok) {
