@@ -1,15 +1,17 @@
 "use client"
 
+import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Package, Tag, Building2, MapPin, FolderOpen, Folder, Settings } from "lucide-react"
+import { Plus, Package, Tag, Building2, MapPin, FolderOpen, Folder, Settings, ChevronDown, ChevronRight } from "lucide-react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 
 export function SettingsTabs() {
   const params = useParams()
   const shopId = params.id as string
+  const [isExpanded, setIsExpanded] = useState(true)
 
   const settingsCards = [
     {
@@ -49,41 +51,61 @@ export function SettingsTabs() {
     },
     {
       title: "Categories",
-      description: "Organize products with categories and subcategories",
+      description: "Organize products with main categories",
       icon: FolderOpen,
       href: `/shop/${shopId}/settings/categories`,
       color: "text-indigo-600"
+    },
+    {
+      title: "Subcategories",
+      description: "Manage subcategories within each category",
+      icon: Folder,
+      href: `/shop/${shopId}/settings/subcategories`,
+      color: "text-cyan-600"
     }
   ]
 
   return (
     <Tabs defaultValue="entities" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="entities">Entity Management</TabsTrigger>
+        <TabsTrigger 
+          value="entities" 
+          className="flex items-center gap-2"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          Entity Management
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </TabsTrigger>
       </TabsList>
       
       <TabsContent value="entities" className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {settingsCards.map((card) => (
-            <Card key={card.title} className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="space-y-1">
-                  <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                  <CardDescription>{card.description}</CardDescription>
-                </div>
-                <card.icon className={`h-4 w-4 ${card.color}`} />
-              </CardHeader>
-              <CardContent>
-                <Link href={card.href}>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Manage {card.title}
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {isExpanded && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {settingsCards.map((card) => (
+              <Card key={card.title} className="hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="space-y-1">
+                    <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                    <CardDescription>{card.description}</CardDescription>
+                  </div>
+                  <card.icon className={`h-4 w-4 ${card.color}`} />
+                </CardHeader>
+                <CardContent>
+                  <Link href={card.href}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Manage {card.title}
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </TabsContent>
     </Tabs>
   )

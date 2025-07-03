@@ -35,31 +35,58 @@ Rails.application.routes.draw do
         end
 
         # Vendor routes
-        resources :vendors
+        resources :vendors do
+          collection do
+            post 'bulk_upload'
+          end
+        end
 
         # Product Type routes
-        resources :product_types
+        resources :product_types do
+          collection do
+            post 'bulk_upload'
+          end
+        end
 
         # Listing Type routes
-        resources :listing_types
+        resources :listing_types do
+          collection do
+            post 'bulk_upload'
+          end
+        end
 
         # Shop Location routes
-        resources :shop_locations
+        resources :shop_locations do
+          collection do
+            post 'bulk_upload'
+          end
+        end
 
         # Category routes
         resources :categories do
           member do
             get 'subcategories'
           end
+          collection do
+            post 'bulk_upload'
+          end
         end
 
         # Subcategory routes (nested under categories)
         resources :categories, only: [] do
-          resources :subcategories
+          resources :subcategories do
+            collection do
+              post 'bulk_upload'
+            end
+          end
         end
 
         # Option Type Set routes
-        resources :option_type_sets
+        resources :option_type_sets do
+          collection do
+            post 'bulk_upload'
+          end
+        end
       end
     end
   end

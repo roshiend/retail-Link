@@ -14,6 +14,7 @@ import { Plus, Edit, Trash2, Search } from "lucide-react"
 import { API_BASE_URL } from "@/lib/api"
 import { useParams } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
+import { CsvUpload } from "./csv-upload"
 
 interface Entity {
   id: number
@@ -28,6 +29,7 @@ interface EntityManagerProps {
   title: string
   description: string
   endpoint: string
+  templateFields: string[]
   fields: {
     name: string
     label: string
@@ -37,7 +39,7 @@ interface EntityManagerProps {
   }[]
 }
 
-export function EntityManager({ title, description, endpoint, fields }: EntityManagerProps) {
+export function EntityManager({ title, description, endpoint, templateFields, fields }: EntityManagerProps) {
   const params = useParams()
   const shopId = params.id as string
   const [entities, setEntities] = useState<Entity[]>([])
@@ -50,15 +52,41 @@ export function EntityManager({ title, description, endpoint, fields }: EntityMa
 
   const fetchEntities = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/${endpoint}`)
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please login again",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/${endpoint}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      })
+
       if (response.ok) {
         const data = await response.json()
         setEntities(data)
+      } else if (response.status === 401) {
+        localStorage.removeItem('token')
+        toast({
+          title: "Session Expired",
+          description: "Please login again",
+          variant: "destructive",
+        })
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to fetch ${title.toLowerCase()}`)
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch data",
+        description: error instanceof Error ? error.message : "Failed to fetch data",
         variant: "destructive",
       })
     } finally {
@@ -72,10 +100,22 @@ export function EntityManager({ title, description, endpoint, fields }: EntityMa
 
   const handleCreate = async () => {
     try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please login again",
+          variant: "destructive",
+        })
+        return
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/${endpoint}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(formData),
       })
@@ -88,13 +128,21 @@ export function EntityManager({ title, description, endpoint, fields }: EntityMa
         setIsCreateDialogOpen(false)
         setFormData({})
         fetchEntities()
+      } else if (response.status === 401) {
+        localStorage.removeItem('token')
+        toast({
+          title: "Session Expired",
+          description: "Please login again",
+          variant: "destructive",
+        })
       } else {
-        throw new Error("Failed to create")
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to create ${title.slice(0, -1).toLowerCase()}`)
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create item",
+        description: error instanceof Error ? error.message : "Failed to create item",
         variant: "destructive",
       })
     }
@@ -104,10 +152,22 @@ export function EntityManager({ title, description, endpoint, fields }: EntityMa
     if (!editingEntity) return
 
     try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please login again",
+          variant: "destructive",
+        })
+        return
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/${endpoint}/${editingEntity.id}`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(formData),
       })
@@ -121,13 +181,21 @@ export function EntityManager({ title, description, endpoint, fields }: EntityMa
         setEditingEntity(null)
         setFormData({})
         fetchEntities()
+      } else if (response.status === 401) {
+        localStorage.removeItem('token')
+        toast({
+          title: "Session Expired",
+          description: "Please login again",
+          variant: "destructive",
+        })
       } else {
-        throw new Error("Failed to update")
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to update ${title.slice(0, -1).toLowerCase()}`)
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update item",
+        description: error instanceof Error ? error.message : "Failed to update item",
         variant: "destructive",
       })
     }
@@ -135,8 +203,22 @@ export function EntityManager({ title, description, endpoint, fields }: EntityMa
 
   const handleDelete = async (id: number) => {
     try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please login again",
+          variant: "destructive",
+        })
+        return
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/${endpoint}/${id}`, {
         method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
       })
 
       if (response.ok) {
@@ -145,13 +227,21 @@ export function EntityManager({ title, description, endpoint, fields }: EntityMa
           description: `${title} deleted successfully`,
         })
         fetchEntities()
+      } else if (response.status === 401) {
+        localStorage.removeItem('token')
+        toast({
+          title: "Session Expired",
+          description: "Please login again",
+          variant: "destructive",
+        })
       } else {
-        throw new Error("Failed to delete")
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to delete ${title.slice(0, -1).toLowerCase()}`)
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete item",
+        description: error instanceof Error ? error.message : "Failed to delete item",
         variant: "destructive",
       })
     }
@@ -235,38 +325,47 @@ export function EntityManager({ title, description, endpoint, fields }: EntityMa
           <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
           <p className="text-muted-foreground">{description}</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add {title.slice(0, -1)}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create {title.slice(0, -1)}</DialogTitle>
-              <DialogDescription>
-                Add a new {title.slice(0, -1).toLowerCase()} to your shop.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              {fields.map((field) => (
-                <div key={field.name} className="space-y-2">
-                  <Label htmlFor={field.name}>
-                    {field.label} {field.required && <span className="text-red-500">*</span>}
-                  </Label>
-                  {renderField(field)}
-                </div>
-              ))}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Cancel
+        <div className="flex items-center space-x-2">
+          <CsvUpload
+            title={title}
+            endpoint={endpoint}
+            shopId={shopId}
+            templateFields={templateFields}
+            onSuccess={fetchEntities}
+          />
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add {title.slice(0, -1)}
               </Button>
-              <Button onClick={handleCreate}>Create</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+              <DialogHeader>
+                <DialogTitle>Create {title.slice(0, -1)}</DialogTitle>
+                <DialogDescription>
+                  Add a new {title.slice(0, -1).toLowerCase()} to your shop.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+                {fields.map((field) => (
+                  <div key={field.name} className="space-y-2">
+                    <Label htmlFor={field.name}>
+                      {field.label} {field.required && <span className="text-red-500">*</span>}
+                    </Label>
+                    {renderField(field)}
+                  </div>
+                ))}
+              </div>
+              <DialogFooter className="flex-shrink-0">
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreate}>Create</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -349,14 +448,14 @@ export function EntityManager({ title, description, endpoint, fields }: EntityMa
       </Card>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Edit {title.slice(0, -1)}</DialogTitle>
             <DialogDescription>
               Update the {title.slice(0, -1).toLowerCase()} information.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-2">
             {fields.map((field) => (
               <div key={field.name} className="space-y-2">
                 <Label htmlFor={field.name}>
@@ -366,7 +465,7 @@ export function EntityManager({ title, description, endpoint, fields }: EntityMa
               </div>
             ))}
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0">
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>

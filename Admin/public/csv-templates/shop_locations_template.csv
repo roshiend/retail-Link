@@ -1,0 +1,11 @@
+name,code,description,address,city,state,postal_code,country,phone,email,active,primary
+Main Store,001,Primary retail location,123 Main Street,New York,NY,10001,USA,+1-555-0201,main@shop.com,true,true
+Downtown Branch,002,Downtown retail location,456 Broadway,New York,NY,10002,USA,+1-555-0202,downtown@shop.com,true,false
+Warehouse,003,Main distribution center,789 Industrial Ave,Brooklyn,NY,11201,USA,+1-555-0203,warehouse@shop.com,true,false
+West Coast Store,004,West Coast retail location,321 Sunset Blvd,Los Angeles,CA,90210,USA,+1-555-0204,westcoast@shop.com,true,false
+Online Fulfillment,005,Online order fulfillment center,654 E-commerce Dr,San Francisco,CA,94105,USA,+1-555-0205,online@shop.com,true,false
+Chicago Branch,006,Midwest retail location,987 Michigan Ave,Chicago,IL,60601,USA,+1-555-0206,chicago@shop.com,true,false
+Miami Store,007,Southeast retail location,147 Ocean Dr,Miami,FL,33139,USA,+1-555-0207,miami@shop.com,true,false
+Seattle Branch,008,Pacific Northwest location,258 Pike St,Seattle,WA,98101,USA,+1-555-0208,seattle@shop.com,true,false
+Austin Store,009,Texas retail location,369 Congress Ave,Austin,TX,78701,USA,+1-555-0209,austin@shop.com,true,false
+Denver Branch,010,Rocky Mountain location,741 16th St,Denver,CO,80202,USA,+1-555-0210,denver@shop.com,true,false 

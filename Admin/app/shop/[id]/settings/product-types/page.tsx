@@ -14,12 +14,15 @@ export default function ProductTypesPage() {
     { name: "active", label: "Active", type: "switch" as const },
   ]
 
+  const templateFields = ["name", "code", "description", "active"]
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <EntityManager
         title="Product Types"
         description="Manage product categories and classifications for your shop"
         endpoint="product_types"
+        templateFields={templateFields}
         fields={fields}
       />
     </div>

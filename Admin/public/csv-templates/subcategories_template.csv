@@ -1,0 +1,37 @@
+name,code,description,active
+Smartphones,001,Mobile phones and accessories,true
+Laptops,002,Portable computers and accessories,true
+Tablets,003,Tablet computers and accessories,true
+Audio Equipment,004,Speakers, headphones, and audio devices,true
+Cameras,005,Digital cameras and photography equipment,true
+Men's Clothing,006,Clothing for men,true
+Women's Clothing,007,Clothing for women,true
+Kids' Clothing,008,Clothing for children,true
+Shoes,009,Footwear for all ages,true
+Accessories,010,Fashion accessories and jewelry,true
+Kitchen Appliances,011,Kitchen and cooking equipment,true
+Furniture,012,Home and office furniture,true
+Garden Tools,013,Gardening equipment and supplies,true
+Lighting,014,Home and commercial lighting,true
+Running Gear,015,Running shoes and equipment,true
+Fitness Equipment,016,Exercise and fitness machines,true
+Team Sports,017,Sports equipment for team activities,true
+Outdoor Gear,018,Camping and outdoor equipment,true
+Fiction Books,019,Novels and fiction literature,true
+Non-Fiction Books,020,Educational and reference books,true
+Online Courses,021,Digital learning materials,true
+Engine Parts,022,Automotive engine components,true
+Exterior Parts,023,Vehicle exterior components,true
+Interior Accessories,024,Vehicle interior products,true
+Skincare,025,Skin care and beauty products,true
+Hair Care,026,Hair care and styling products,true
+Makeup,027,Cosmetics and makeup products,true
+Board Games,028,Traditional board games,true
+Video Games,029,Digital and console games,true
+Educational Toys,030,Learning and educational toys,true
+Snacks,031,Processed and packaged snacks,true
+Beverages,032,Drinks and liquid products,true
+Organic Foods,033,Natural and organic food products,true
+Necklaces,034,Neck jewelry and chains,true
+Rings,035,Finger rings and bands,true
+Watches,036,Timepieces and wristwatches,true 

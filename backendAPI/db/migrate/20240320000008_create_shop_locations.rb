@@ -4,6 +4,7 @@ class CreateShopLocations < ActiveRecord::Migration[8.0]
       t.references :shop, null: false, foreign_key: true
       t.string :name, null: false 
       t.string :code
+      t.text :description
       t.text :address
       t.string :city
       t.string :state
@@ -12,7 +13,7 @@ class CreateShopLocations < ActiveRecord::Migration[8.0]
       t.string :phone
       t.string :email
       t.boolean :active, default: true
-      t.boolean :primary, default: false
+      t.boolean :primary, default: false  
 
       t.timestamps
     end

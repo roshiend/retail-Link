@@ -61,6 +61,7 @@ ActiveRecord::Schema[8.0].define(version: 2024_03_20_000014) do
     t.bigint "shop_id", null: false
     t.string "name", null: false
     t.string "code"
+    t.text "description"
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -120,6 +121,7 @@ ActiveRecord::Schema[8.0].define(version: 2024_03_20_000014) do
     t.bigint "shop_id", null: false
     t.string "name", null: false
     t.string "code"
+    t.text "description"
     t.text "address"
     t.string "city"
     t.string "state"

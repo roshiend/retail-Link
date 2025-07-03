@@ -3,7 +3,7 @@ import { EntityManager } from "@/components/entity-manager"
 
 export const metadata: Metadata = {
   title: "Vendors",
-  description: "Manage product suppliers and vendors",
+  description: "Manage vendors and suppliers",
 }
 
 export default function VendorsPage() {
@@ -17,12 +17,15 @@ export default function VendorsPage() {
     { name: "active", label: "Active", type: "switch" as const },
   ]
 
+  const templateFields = ["name", "code", "description", "contact_email", "contact_phone", "website", "active"]
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <EntityManager
         title="Vendors"
-        description="Manage your product suppliers and vendors"
+        description="Manage vendors and suppliers for your products"
         endpoint="vendors"
+        templateFields={templateFields}
         fields={fields}
       />
     </div>

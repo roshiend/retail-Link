@@ -1,0 +1,11 @@
+name,code,description,active
+Physical Product,001,Tangible items that require shipping,true
+Digital Download,002,Digital products for immediate download,true
+Service,003,Professional services and consultations,true
+Subscription,004,Recurring subscription products,true
+Rental,005,Items available for rent,true
+Event Ticket,006,Tickets for events and experiences,true
+Gift Card,007,Digital and physical gift cards,true
+Membership,008,Membership and access products,true
+Course,009,Educational courses and training,true
+Consultation,010,Professional consultation services,true 

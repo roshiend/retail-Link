@@ -1,0 +1,11 @@
+name,code,description,active
+Size,001,Product size variations (S, M, L, XL),true
+Color,002,Product color options,true
+Material,003,Product material variations,true
+Flavor,004,Food and beverage flavor options,true
+Gender,005,Gender-specific product options,true
+Style,006,Product style variations,true
+Weight,007,Product weight options,true
+Length,008,Product length variations,true
+Width,009,Product width options,true
+Height,010,Product height variations,true 
