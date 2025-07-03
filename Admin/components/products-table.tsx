@@ -179,6 +179,19 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
     return product.stock_quantity || 0
   }
 
+  // Calculate inventory display
+  const calculateInventory = (product: Product) => {
+    const quantity = product.stock_quantity || 0
+    if (quantity === 0) return "Out of stock"
+    if (quantity < 10) return `${quantity} (Low)`
+    return quantity.toString()
+  }
+
+  // Get variant count (for now, return 1 as we don't have variants yet)
+  const getVariantCount = (product: Product) => {
+    return 1
+  }
+
   // Format price safely
   const formatPrice = (price: number | string | null | undefined) => {
     // Convert to number if it's a string or handle null/undefined
@@ -292,7 +305,7 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
             Export
           </Button>
           <Button asChild size="sm" className="bg-green-600 hover:bg-green-700">
-            <Link href="/dashboard/products/new">
+            <Link href={`/shop/${shopId}/products/new`}>
               <Plus className="mr-2 h-4 w-4" />
               Add product
             </Link>
@@ -335,7 +348,7 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
           </p>
           {!searchQuery && !statusFilter && (
             <Button asChild className="mt-4 bg-green-600 hover:bg-green-700">
-              <Link href="/dashboard/products/new">Add Product</Link>
+              <Link href={`/shop/${shopId}/products/new`}>Add Product</Link>
             </Button>
           )}
         </div>
@@ -352,10 +365,10 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
                   />
                 </TableHead>
                 <TableHead className="w-12"></TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort("title")}>
+                <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>
                   <div className="flex items-center">
                     Product
-                    {sortField === "title" && (
+                    {sortField === "name" && (
                       <ArrowUpDown className={`ml-1 h-4 w-4 ${sortDirection === "desc" ? "rotate-180" : ""}`} />
                     )}
                   </div>
@@ -400,25 +413,25 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
               {sortedProducts.map((product) => (
                 <TableRow key={product.id} className="group">
                   <TableCell>
-                    <Checkbox
-                      checked={selectedProducts.includes(product.id)}
-                      onCheckedChange={() => toggleSelectProduct(product.id)}
-                      aria-label={`Select ${product.title}`}
-                    />
+                                          <Checkbox
+                        checked={selectedProducts.includes(product.id)}
+                        onCheckedChange={() => toggleSelectProduct(product.id)}
+                        aria-label={`Select ${product.name}`}
+                      />
                   </TableCell>
                   <TableCell>
                     <div className="h-10 w-10 rounded-md bg-gray-100 flex items-center justify-center">
                       <img
                         src="/placeholder.svg?height=40&width=40"
-                        alt={product.title}
+                        alt={product.name}
                         className="h-10 w-10 object-cover rounded-md"
                       />
                     </div>
                   </TableCell>
-                  <TableCell className="font-medium">{product.title}</TableCell>
+                  <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>
-                    <Badge variant={product.status === "active" ? "success" : "secondary"}>
-                      {product.status === "active" ? "Active" : "Draft"}
+                    <Badge variant={product.active ? "default" : "secondary"}>
+                      {product.active ? "Active" : "Draft"}
                     </Badge>
                   </TableCell>
                   <TableCell>{calculateInventory(product)}</TableCell>
@@ -462,7 +475,7 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you want to delete this product?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the product "{productToDelete?.title}" and
+              This action cannot be undone. This will permanently delete the product "{productToDelete?.name}" and
               remove it from your catalog.
             </AlertDialogDescription>
           </AlertDialogHeader>

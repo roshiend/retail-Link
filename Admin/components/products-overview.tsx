@@ -1,8 +1,5 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { api } from "@/lib/api"
@@ -63,83 +60,59 @@ export function ProductsOverview({ shopId }: ProductsOverviewProps) {
   }
 
   return (
-    <Card className="col-span-4">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div className="space-y-1">
-          <CardTitle>Recent Products</CardTitle>
-          <CardDescription>You have {productCount} products in your catalog.</CardDescription>
-        </div>
-        <div className="flex space-x-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/shop/${shopId}/products`}>
-              View All
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href={`/shop/${shopId}/products/new`}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Product
-            </Link>
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {isLoading ? (
-              // Show loading placeholders
-              Array(6)
-                .fill(0)
-                .map((_, i) => (
-                  <div key={i} className="flex items-center space-x-4 rounded-md border p-4">
-                    <div className="h-12 w-12 rounded-md bg-gray-200 animate-pulse" />
-                    <div className="space-y-2 flex-1">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                      <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
-                    </div>
-                  </div>
-                ))
-            ) : recentProducts.length > 0 ? (
-              // Show actual products
-              recentProducts.map((product) => (
-                <Link 
-                  key={product.id} 
-                  href={`/shop/${shopId}/products/${product.id}`}
-                  className="flex items-center space-x-4 rounded-md border p-4 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="relative h-12 w-12 rounded-md bg-gray-200 overflow-hidden">
-                    {product.image_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img 
-                        src={product.image_url} 
-                        alt={product.name}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">{product.name}</p>
-                      {!product.active && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                          Inactive
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">${formatPrice(product.price)}</p>
-                  </div>
-                </Link>
-              ))
-            ) : (
-              // Show empty state
-              <div className="col-span-3 text-center py-6">
-                <p className="text-muted-foreground">No products found. Add your first product to get started.</p>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {isLoading ? (
+          // Show loading placeholders
+          Array(6)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="flex items-center space-x-4 rounded-md border p-4">
+                <div className="h-12 w-12 rounded-md bg-gray-200 animate-pulse" />
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+                </div>
               </div>
-            )}
+            ))
+        ) : recentProducts.length > 0 ? (
+          // Show actual products
+          recentProducts.map((product) => (
+            <Link 
+              key={product.id} 
+              href={`/shop/${shopId}/products/${product.id}`}
+              className="flex items-center space-x-4 rounded-md border p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="relative h-12 w-12 rounded-md bg-gray-200 overflow-hidden">
+                {product.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img 
+                    src={product.image_url} 
+                    alt={product.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">{product.name}</p>
+                  {!product.active && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      Inactive
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">${formatPrice(product.price)}</p>
+              </div>
+            </Link>
+          ))
+        ) : (
+          // Show empty state
+          <div className="col-span-3 text-center py-6">
+            <p className="text-muted-foreground">No products found. Add your first product to get started.</p>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        )}
+      </div>
+    </div>
   )
 }

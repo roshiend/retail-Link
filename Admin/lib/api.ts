@@ -49,6 +49,14 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+interface SalesData {
+  today: number
+  yesterday: number
+  thisWeek: number
+  lastWeek: number
+  change: number
+}
+
 export const api = {
   async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
@@ -257,6 +265,38 @@ export const api = {
     } catch (error) {
       console.error('Bulk delete products error:', error);
       return { error: error instanceof Error ? error.message : 'Failed to delete products' };
+    }
+  },
+
+  async getSalesData(shopId: number): Promise<ApiResponse<SalesData>> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/shops/${shopId}/sales`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          throw new Error('Session expired. Please login again.');
+        }
+        const errorText = await response.text();
+        console.error('Get sales data error response:', errorText);
+        throw new Error(errorText || 'Failed to fetch sales data');
+      }
+
+      const data = await response.json();
+      return { data };
+    } catch (error) {
+      console.error('Get sales data error:', error);
+      return { error: error instanceof Error ? error.message : 'Failed to fetch sales data' };
     }
   },
 }; 
