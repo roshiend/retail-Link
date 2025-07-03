@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
+import { api } from "@/lib/api"
 
 // Define types for the product data
 interface ProductVariant {
@@ -50,13 +51,13 @@ interface OptionType {
 
 interface Product {
   id: number
-  title: string
-  status: string
-  price: number | string | null
+  name: string
+  price: number | string
   sku: string
   description?: string
-  option_types: OptionType[]
-  variants: ProductVariant[]
+  stock_quantity: number
+  image_url?: string
+  active: boolean
 }
 
 interface ProductsTableProps {
@@ -70,7 +71,7 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [selectedProducts, setSelectedProducts] = useState<number[]>([])
-  const [sortField, setSortField] = useState<string>("title")
+  const [sortField, setSortField] = useState<string>("name")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
 
   const { toast } = useToast()
@@ -84,19 +85,16 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
       setError(null)
 
       try {
-        const response = await fetch(`http://127.0.0.1:3000/api/v1/shops/${shopId}/products`)
+        const response = await api.getProducts(shopId)
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`)
+        if (response.error) {
+          throw new Error(response.error)
         }
 
-        const data = await response.json()
-
-        // Check if the data has the expected structure
-        if (data && data.products && Array.isArray(data.products)) {
-          setProducts(data.products)
+        if (response.data && Array.isArray(response.data.products)) {
+          setProducts(response.data.products)
         } else {
-          console.error("Unexpected API response format:", data)
+          console.error("Unexpected API response format:", response.data)
           setProducts([])
           setError("Received unexpected data format from the API")
         }
@@ -115,11 +113,11 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
   const filteredProducts = products.filter((product) => {
     // Filter by search query
     const matchesSearch =
-      product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase()))
 
     // Filter by status if a status filter is applied
-    const matchesStatus = statusFilter ? product.status === statusFilter : true
+    const matchesStatus = statusFilter ? product.active === (statusFilter === 'active') : true
 
     return matchesSearch && matchesStatus
   })
@@ -129,17 +127,17 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
     let aValue, bValue
 
     switch (sortField) {
-      case "title":
-        aValue = a.title
-        bValue = b.title
+      case "name":
+        aValue = a.name
+        bValue = b.name
         break
       case "status":
-        aValue = a.status
-        bValue = b.status
+        aValue = a.active
+        bValue = b.active
         break
       case "inventory":
-        aValue = calculateInventory(a)
-        bValue = calculateInventory(b)
+        aValue = getInventory(a)
+        bValue = getInventory(b)
         break
       case "sku":
         aValue = a.sku
@@ -150,8 +148,8 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
         bValue = typeof b.price === "string" ? Number.parseFloat(b.price) : b.price || 0
         break
       default:
-        aValue = a.title
-        bValue = b.title
+        aValue = a.name
+        bValue = b.name
     }
 
     if (sortDirection === "asc") {
@@ -176,14 +174,9 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
     setStatusFilter(status === statusFilter ? null : status)
   }
 
-  // Calculate inventory for a product (sum of all variant quantities)
-  const calculateInventory = (product: Product) => {
-    return product.variants.reduce((total, variant) => total + (variant.quantity || 0), 0)
-  }
-
-  // Get the number of variants for a product
-  const getVariantCount = (product: Product) => {
-    return product.variants.length
+  // Get inventory for a product (stock quantity)
+  const getInventory = (product: Product) => {
+    return product.stock_quantity || 0
   }
 
   // Format price safely
@@ -201,25 +194,25 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
   const deleteProduct = async (product: Product) => {
     setIsDeleting(true)
     try {
-      const response = await fetch(`http://127.0.0.1:3000/api/v1/shops/${shopId}/products/${product.id}`, {
-        method: "DELETE",
-      })
+      const response = await api.deleteProduct(shopId, product.id)
 
-      if (!response.ok) {
-        throw new Error(`Failed to delete product: ${response.status} ${response.statusText}`)
+      if (response.error) {
+        throw new Error(response.error)
       }
 
-      setProducts((prevProducts) => prevProducts.filter((p) => p.id !== product.id))
+      // Remove the product from the local state
+      setProducts(products.filter((p) => p.id !== product.id))
+
       toast({
-        title: "Success",
-        description: "Product deleted successfully",
+        title: "Product deleted",
+        description: `"${product.name}" has been deleted successfully.`,
       })
     } catch (err) {
       console.error("Error deleting product:", err)
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to delete product",
         variant: "destructive",
+        title: "Failed to delete product",
+        description: err instanceof Error ? err.message : "An unknown error occurred",
       })
     } finally {
       setIsDeleting(false)
@@ -243,12 +236,35 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
   }
 
   // Handle bulk delete
-  const handleBulkDelete = () => {
-    // Implementation would go here
-    toast({
-      title: "Bulk delete",
-      description: `${selectedProducts.length} products selected for deletion.`,
-    })
+  const handleBulkDelete = async () => {
+    if (selectedProducts.length === 0) return
+
+    setIsDeleting(true)
+    try {
+      const response = await api.bulkDeleteProducts(shopId, selectedProducts)
+
+      if (response.error) {
+        throw new Error(response.error)
+      }
+
+      // Remove the deleted products from the local state
+      setProducts(products.filter((p) => !selectedProducts.includes(p.id)))
+      setSelectedProducts([])
+
+      toast({
+        title: "Products deleted",
+        description: `${selectedProducts.length} products have been deleted successfully.`,
+      })
+    } catch (err) {
+      console.error("Error deleting products:", err)
+      toast({
+        variant: "destructive",
+        title: "Failed to delete products",
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+      })
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (

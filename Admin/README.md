@@ -1,30 +1,24 @@
-# React shopify clone
+# README
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+This README would normally document whatever steps are necessary to get the
+application up and running.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/rdlmoving-gmailcoms-projects/v0-react-shopify-clone)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/mQ6NVpYY2zf)
+Things you may want to cover:
 
-## Overview
+* Ruby version
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+* System dependencies
 
-## Deployment
+* Configuration
 
-Your project is live at:
+* Database creation
 
-**[https://vercel.com/rdlmoving-gmailcoms-projects/v0-react-shopify-clone](https://vercel.com/rdlmoving-gmailcoms-projects/v0-react-shopify-clone)**
+* Database initialization
 
-## Build your app
+* How to run the test suite
 
-Continue building your app on:
+* Services (job queues, cache servers, search engines, etc.)
 
-**[https://v0.dev/chat/projects/mQ6NVpYY2zf](https://v0.dev/chat/projects/mQ6NVpYY2zf)**
+* Deployment instructions
 
-## How It Works
-
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+* ...

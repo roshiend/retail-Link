@@ -5,14 +5,21 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, Plus } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import { api } from "@/lib/api"
 
 interface Product {
   id: number
-  title: string
-  price: number | string | null
+  name: string
+  price: number | string
+  image_url?: string
+  active: boolean
 }
 
-export function ProductsOverview() {
+interface ProductsOverviewProps {
+  shopId: number
+}
+
+export function ProductsOverview({ shopId }: ProductsOverviewProps) {
   const [recentProducts, setRecentProducts] = useState<Product[]>([])
   const [productCount, setProductCount] = useState<number>(0)
   const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -20,20 +27,18 @@ export function ProductsOverview() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:3000/api/v1/products")
+        const response = await api.getProducts(shopId)
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch products")
+        if (response.error) {
+          throw new Error(response.error)
         }
 
-        const data = await response.json()
-
-        if (data && data.products && Array.isArray(data.products)) {
+        if (response.data && Array.isArray(response.data.products)) {
           // Get the total count
-          setProductCount(data.products.length)
+          setProductCount(response.data.products.length)
 
           // Get the 6 most recent products (or fewer if there aren't 6)
-          setRecentProducts(data.products.slice(0, 6))
+          setRecentProducts(response.data.products.slice(0, 6))
         }
       } catch (error) {
         console.error("Error fetching products:", error)
@@ -43,31 +48,7 @@ export function ProductsOverview() {
     }
 
     fetchProducts()
-  }, [])
-
-  // Add this function inside the ProductsOverview component, after the useEffect hook
-  // This will allow us to refresh the products list when needed
-  const refreshProducts = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch("http://127.0.0.1:3000/api/v1/products")
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch products")
-      }
-
-      const data = await response.json()
-
-      if (data && data.products && Array.isArray(data.products)) {
-        setProductCount(data.products.length)
-        setRecentProducts(data.products.slice(0, 6))
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  }, [shopId])
 
   // Format price safely
   const formatPrice = (price: number | string | null | undefined) => {
@@ -81,11 +62,6 @@ export function ProductsOverview() {
     return numPrice.toFixed(2)
   }
 
-  // Export the refreshProducts function so it can be used by other components
-  useEffect(() => {
-    refreshProducts()
-  }, [])
-
   return (
     <Card className="col-span-4">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -95,13 +71,13 @@ export function ProductsOverview() {
         </div>
         <div className="flex space-x-2">
           <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/products">
+            <Link href={`/shop/${shopId}/products`}>
               View All
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
           <Button asChild size="sm">
-            <Link href="/dashboard/products/new">
+            <Link href={`/shop/${shopId}/products/new`}>
               <Plus className="mr-2 h-4 w-4" />
               Add Product
             </Link>
@@ -127,13 +103,33 @@ export function ProductsOverview() {
             ) : recentProducts.length > 0 ? (
               // Show actual products
               recentProducts.map((product) => (
-                <div key={product.id} className="flex items-center space-x-4 rounded-md border p-4">
-                  <div className="h-12 w-12 rounded-md bg-gray-200" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">{product.title}</p>
+                <Link 
+                  key={product.id} 
+                  href={`/shop/${shopId}/products/${product.id}`}
+                  className="flex items-center space-x-4 rounded-md border p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="relative h-12 w-12 rounded-md bg-gray-200 overflow-hidden">
+                    {product.image_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img 
+                        src={product.image_url} 
+                        alt={product.name}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{product.name}</p>
+                      {!product.active && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                          Inactive
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">${formatPrice(product.price)}</p>
                   </div>
-                </div>
+                </Link>
               ))
             ) : (
               // Show empty state

@@ -78,10 +78,10 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await api.signup(data) as ApiResponse<SignupResponse>
+    const response = await api.signup(data) as ApiResponse<SignupResponse>
 
-      if (response.error) {
-        setError(response.error)
+    if (response.error) {
+      setError(response.error)
         return
       }
 

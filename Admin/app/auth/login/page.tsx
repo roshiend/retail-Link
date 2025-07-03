@@ -47,17 +47,26 @@ export default function LoginPage() {
         return
       }
 
-      if (!response.data?.token || !response.data?.user?.shop?.id) {
+      if (!response.data?.token || !response.data?.user) {
         setError("Invalid response from server")
         return
       }
 
+      const { user, token } = response.data
+
       // Store the token
-      localStorage.setItem("token", response.data.token)
+      localStorage.setItem("token", token)
       
-      // Redirect to shop dashboard
-      router.push(`/shop/${response.data.user.shop.id}/dashboard`)
+      // Check if user has a shop
+      if (user.shop?.id) {
+        // Redirect to shop dashboard
+        router.push(`/shop/${user.shop.id}/dashboard`)
+      } else {
+        // User has no shops, redirect to dashboard to create one
+        router.push('/dashboard')
+      }
     } catch (err) {
+      console.error('Login error:', err)
       setError(err instanceof Error ? err.message : "An unexpected error occurred")
     } finally {
       setIsLoading(false)

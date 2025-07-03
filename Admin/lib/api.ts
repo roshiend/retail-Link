@@ -17,6 +17,20 @@ interface User {
   };
 }
 
+interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  price: number | string;
+  sku: string;
+  stock_quantity: number;
+  image_url?: string;
+  active: boolean;
+  shop_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
 interface LoginCredentials {
   email: string;
   password: string;
@@ -144,6 +158,105 @@ export const api = {
     } catch (error) {
       console.error('Create shop error:', error);
       return { error: error instanceof Error ? error.message : 'Failed to create shop' };
+    }
+  },
+
+  async getProducts(shopId: number): Promise<ApiResponse<{ products: Product[] }>> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/shops/${shopId}/products`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          throw new Error('Session expired. Please login again.');
+        }
+        const errorText = await response.text();
+        console.error('Get products error response:', errorText);
+        throw new Error(errorText || 'Failed to fetch products');
+      }
+
+      const products = await response.json();
+      // The API returns an array directly, so we wrap it in the expected format
+      return { data: { products: Array.isArray(products) ? products : [] } };
+    } catch (error) {
+      console.error('Get products error:', error);
+      return { error: error instanceof Error ? error.message : 'Failed to fetch products' };
+    }
+  },
+
+  async deleteProduct(shopId: number, productId: number): Promise<ApiResponse<void>> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/shops/${shopId}/products/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          throw new Error('Session expired. Please login again.');
+        }
+        const errorText = await response.text();
+        console.error('Delete product error response:', errorText);
+        throw new Error(errorText || 'Failed to delete product');
+      }
+
+      return { data: undefined };
+    } catch (error) {
+      console.error('Delete product error:', error);
+      return { error: error instanceof Error ? error.message : 'Failed to delete product' };
+    }
+  },
+
+  async bulkDeleteProducts(shopId: number, productIds: number[]): Promise<ApiResponse<void>> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/shops/${shopId}/products/bulk_delete`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ product_ids: productIds })
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          throw new Error('Session expired. Please login again.');
+        }
+        const errorText = await response.text();
+        console.error('Bulk delete products error response:', errorText);
+        throw new Error(errorText || 'Failed to delete products');
+      }
+
+      return { data: undefined };
+    } catch (error) {
+      console.error('Bulk delete products error:', error);
+      return { error: error instanceof Error ? error.message : 'Failed to delete products' };
     }
   },
 }; 

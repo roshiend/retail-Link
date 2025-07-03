@@ -1,31 +1,32 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { api } from '@/lib/api'
-import { DashboardShell } from '@/components/dashboard-shell'
-import { DashboardHeader } from '@/components/dashboard-header'
-import { Button } from '@/components/ui/button'
-import { PlusCircle } from 'lucide-react'
-import { ProductList } from '@/components/products/product-list'
-import { ProductCreateButton } from '@/components/products/product-create-button'
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { api } from "@/lib/api"
+import { DashboardShell } from "@/components/dashboard-shell"
+import { DashboardHeader } from "@/components/dashboard-header"
+import { Button } from "@/components/ui/button"
+import { PlusCircle } from "lucide-react"
+import { ProductsTable } from "@/components/products-table"
+import { ProductsOverview } from "@/components/products-overview"
+import { Card } from "@/components/ui/card"
 
 interface Shop {
-  id: number;
-  name: string;
-  role?: string;
+  id: number
+  name: string
+  role?: string
 }
 
 interface User {
-  id: number;
-  email: string;
-  full_name: string;
-  shops: Shop[];
+  id: number
+  email: string
+  full_name: string
+  shops: Shop[]
 }
 
 interface ApiResponse<T> {
-  data?: T;
-  error?: string;
+  data?: T
+  error?: string
 }
 
 export default function ShopDashboardPage({ params }: { params: { id: string } }) {
@@ -41,13 +42,13 @@ export default function ShopDashboardPage({ params }: { params: { id: string } }
         const response = await api.getCurrentUser()
         if (response.error) {
           console.error('Auth error:', response.error)
-          router.push('/login')
+          router.push('/auth/login')
           return
         }
 
         if (!response.data?.user) {
           console.error('No user data in response')
-          router.push('/login')
+          router.push('/auth/login')
           return
         }
 
@@ -61,7 +62,7 @@ export default function ShopDashboardPage({ params }: { params: { id: string } }
         setShop(userShop)
       } catch (err) {
         console.error('Error checking auth:', err)
-        router.push('/login')
+        router.push('/auth/login')
       } finally {
         setIsLoading(false)
       }
@@ -127,11 +128,22 @@ export default function ShopDashboardPage({ params }: { params: { id: string } }
         heading={shop.name}
         text="Manage your products and inventory."
       >
-        <ProductCreateButton shopId={shop.id} />
+        <Button
+          onClick={() => router.push(`/shop/${shop.id}/products/new`)}
+          className="flex items-center gap-2"
+        >
+          <PlusCircle className="h-4 w-4" />
+          Add Product
+        </Button>
       </DashboardHeader>
       <div className="grid gap-8">
-        <ProductList shopId={shop.id} />
+        <Card className="p-6">
+          <ProductsOverview shopId={shop.id} />
+        </Card>
+        <Card className="p-6">
+          <ProductsTable shopId={shop.id} />
+        </Card>
       </div>
     </DashboardShell>
   )
-}
+} 

@@ -2,6 +2,7 @@ module Api
   module V1
     class AuthController < ApplicationController
       skip_before_action :authenticate_user!, only: [:signup, :login]
+      before_action :configure_permitted_parameters, if: :devise_controller?
 
       def signup
         ActiveRecord::Base.transaction do
@@ -23,7 +24,7 @@ module Api
               role: 'owner'
             )
 
-            # Generate JWT token using Devise JWT
+            # Generate JWT token
             token = user.generate_jwt
 
             render json: {
@@ -39,17 +40,17 @@ module Api
               token: token
             }, status: :created
           else
-            render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+            render json: { error: user.errors.full_messages.join(', ') }, status: :unprocessable_entity
           end
         end
       rescue ActiveRecord::RecordInvalid => e
-        render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
+        render json: { error: e.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
       end
 
       def login
         user = User.find_by(email: params[:email])
         if user&.valid_password?(params[:password])
-          # Generate JWT token using Devise JWT
+          # Generate JWT token
           token = user.generate_jwt
 
           render json: {
@@ -67,26 +68,34 @@ module Api
       end
 
       def me
-        render json: {
-          user: {
-            id: current_user.id,
-            email: current_user.email,
-            full_name: current_user.full_name,
-            shops: current_user.shops.map { |shop| 
-              {
-                id: shop.id,
-                name: shop.name,
-                role: shop.memberships.find_by(user: current_user).role
+        if current_user
+          render json: {
+            user: {
+              id: current_user.id,
+              email: current_user.email,
+              full_name: current_user.full_name,
+              shops: current_user.shops.map { |shop| 
+                {
+                  id: shop.id,
+                  name: shop.name,
+                  role: shop.memberships.find_by(user: current_user).role
+                }
               }
             }
           }
-        }
+        else
+          render json: { error: 'Unauthorized' }, status: :unauthorized
+        end
       end
 
       private
 
+      def configure_permitted_parameters
+        devise_parameter_sanitizer.permit(:sign_up, keys: [:email, :password, :password_confirmation, :full_name])
+      end
+
       def user_params
-        params.require(:user).permit(:email, :password, :password_confirmation)
+        params.permit(:email, :password, :password_confirmation, :full_name, :store_name)
       end
     end
   end
