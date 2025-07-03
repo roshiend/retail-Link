@@ -304,12 +304,6 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button asChild size="sm" className="bg-green-600 hover:bg-green-700">
-            <Link href={`/shop/${shopId}/products/new`}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add product
-            </Link>
-          </Button>
         </div>
       </div>
 
@@ -338,7 +332,7 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2 text-lg">Loading products...</span>
         </div>
-      ) : sortedProducts.length === 0 ? (
+              ) : sortedProducts.length === 0 ? (
         <div className="text-center py-8 border rounded-md">
           <p className="text-lg font-medium">No products found</p>
           <p className="text-muted-foreground">
@@ -346,11 +340,6 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
               ? "Try adjusting your search or filters"
               : "Add your first product to get started"}
           </p>
-          {!searchQuery && !statusFilter && (
-            <Button asChild className="mt-4 bg-green-600 hover:bg-green-700">
-              <Link href={`/shop/${shopId}/products/new`}>Add Product</Link>
-            </Button>
-          )}
         </div>
       ) : (
         <div className="rounded-md border overflow-hidden">

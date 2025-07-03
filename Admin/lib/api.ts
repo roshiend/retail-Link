@@ -57,6 +57,18 @@ interface SalesData {
   change: number
 }
 
+interface OptionTypeSet {
+  id: number;
+  name: string;
+  option_types: OptionType[];
+}
+
+interface OptionType {
+  id: number;
+  name: string;
+  values: string[];
+}
+
 export const api = {
   async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
@@ -297,6 +309,80 @@ export const api = {
     } catch (error) {
       console.error('Get sales data error:', error);
       return { error: error instanceof Error ? error.message : 'Failed to fetch sales data' };
+    }
+  },
+
+  async getOptionTypeSets(): Promise<ApiResponse<{ option_type_sets: OptionTypeSet[] }>> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/option_type_sets`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          throw new Error('Session expired. Please login again.');
+        }
+        const errorText = await response.text();
+        console.error('Get option type sets error response:', errorText);
+        throw new Error(errorText || 'Failed to fetch option type sets');
+      }
+
+      const data = await response.json();
+      return { data: { option_type_sets: Array.isArray(data) ? data : [] } };
+    } catch (error) {
+      console.error('Get option type sets error:', error);
+      return { error: error instanceof Error ? error.message : 'Failed to fetch option type sets' };
+    }
+  },
+
+  async createProduct(shopId: number, productData: {
+    name: string;
+    description?: string;
+    price: number;
+    sku: string;
+    stock_quantity: number;
+    active?: boolean;
+  }): Promise<ApiResponse<{ product: Product }>> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/shops/${shopId}/products`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(productData)
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          throw new Error('Session expired. Please login again.');
+        }
+        const errorText = await response.text();
+        console.error('Create product error response:', errorText);
+        throw new Error(errorText || 'Failed to create product');
+      }
+
+      const data = await response.json();
+      return { data: { product: data } };
+    } catch (error) {
+      console.error('Create product error:', error);
+      return { error: error instanceof Error ? error.message : 'Failed to create product' };
     }
   },
 }; 
