@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { API_BASE_URL } from "@/lib/api"
 
 // Define types for options and variants
 interface OptionType {
@@ -51,6 +52,7 @@ interface VariantsManagerProps {
   initialVariants?: ProductVariant[]
   onOptionsChange?: (options: ProductOption[]) => void
   onVariantsChange?: (variants: ProductVariant[]) => void
+  shopId?: string | number
 }
 
 export function VariantsManager({
@@ -58,6 +60,7 @@ export function VariantsManager({
   initialVariants = [],
   onOptionsChange,
   onVariantsChange,
+  shopId,
 }: VariantsManagerProps) {
   const [optionTypes, setOptionTypes] = useState<OptionType[]>([])
   const [options, setOptions] = useState<ProductOption[]>(initialOptions.length ? initialOptions : [])
@@ -75,7 +78,7 @@ export function VariantsManager({
     const fetchOptionTypes = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch("http://127.0.0.1:3000/api/v1/option_type_sets")
+        const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/option_type_sets`)
 
         if (!response.ok) {
           throw new Error("Failed to fetch option types")

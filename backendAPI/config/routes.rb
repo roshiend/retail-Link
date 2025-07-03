@@ -22,9 +22,44 @@ Rails.application.routes.draw do
         end
       end
 
-      # Product routes (scoped to shops)
+      # Shop-scoped resources
       resources :shops, only: [] do
-        resources :products
+        # Product routes
+        resources :products do
+          collection do
+            post 'bulk_delete'
+          end
+          
+          # Option Type routes (nested under products)
+          resources :option_types
+        end
+
+        # Vendor routes
+        resources :vendors
+
+        # Product Type routes
+        resources :product_types
+
+        # Listing Type routes
+        resources :listing_types
+
+        # Shop Location routes
+        resources :shop_locations
+
+        # Category routes
+        resources :categories do
+          member do
+            get 'subcategories'
+          end
+        end
+
+        # Subcategory routes (nested under categories)
+        resources :categories, only: [] do
+          resources :subcategories
+        end
+
+        # Option Type Set routes
+        resources :option_type_sets
       end
     end
   end

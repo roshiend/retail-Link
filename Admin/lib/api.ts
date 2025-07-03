@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface Shop {
   id: number;
@@ -72,8 +72,8 @@ interface OptionType {
 export const api = {
   async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
-      console.log('Attempting login to:', `${API_BASE_URL}/login`);
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      console.log('Attempting login to:', `${API_BASE_URL}/api/v1/login`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,8 +98,8 @@ export const api = {
 
   async signup(data: SignupData): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
-      console.log('Attempting signup to:', `${API_BASE_URL}/signup`);
-      const response = await fetch(`${API_BASE_URL}/signup`, {
+      console.log('Attempting signup to:', `${API_BASE_URL}/api/v1/signup`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ export const api = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/me`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -157,7 +157,7 @@ export const api = {
 
   async createShop(token: string, name: string): Promise<ApiResponse<{ shop: Shop }>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/shops`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -188,7 +188,7 @@ export const api = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/shops/${shopId}/products`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/products`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -221,7 +221,7 @@ export const api = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/shops/${shopId}/products/${productId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -253,7 +253,7 @@ export const api = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/shops/${shopId}/products/bulk_delete`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/products/bulk_delete`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -287,7 +287,7 @@ export const api = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/shops/${shopId}/sales`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/sales`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -319,7 +319,7 @@ export const api = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/option_type_sets`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/option_type_sets`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -358,7 +358,7 @@ export const api = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/shops/${shopId}/products`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/products`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

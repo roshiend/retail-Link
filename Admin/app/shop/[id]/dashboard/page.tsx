@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react"
 import { useRouter } from "next/navigation"
 import { api } from "@/lib/api"
 import { DashboardHeader } from "@/components/dashboard-header"
@@ -58,7 +58,7 @@ interface ApiResponse<T> {
   error?: string
 }
 
-export default function ShopDashboardPage({ params }: { params: { id: string } }) {
+export default function ShopDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [shop, setShop] = useState<Shop | null>(null)
   const [products, setProducts] = useState<Product[]>([])
@@ -71,7 +71,8 @@ export default function ShopDashboardPage({ params }: { params: { id: string } }
   })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
-  const shopId = parseInt(params.id)
+  const resolvedParams = use(params)
+  const shopId = parseInt(resolvedParams.id)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -135,46 +136,46 @@ export default function ShopDashboardPage({ params }: { params: { id: string } }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Loading...</h2>
-          <p className="text-muted-foreground">Please wait while we load your shop data.</p>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Loading...</h2>
+            <p className="text-muted-foreground">Please wait while we load your shop data.</p>
+          </div>
         </div>
-      </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Error</h2>
-          <p className="text-muted-foreground">{error}</p>
-          <Button 
-            onClick={() => router.push('/dashboard')}
-            className="mt-4"
-          >
-            Return to Dashboard
-          </Button>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Error</h2>
+            <p className="text-muted-foreground">{error}</p>
+            <Button 
+              onClick={() => router.push('/dashboard')}
+              className="mt-4"
+            >
+              Return to Dashboard
+            </Button>
+          </div>
         </div>
-      </div>
     )
   }
 
   if (!shop) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Shop Not Found</h2>
-          <p className="text-muted-foreground">The requested shop could not be found.</p>
-          <Button 
-            onClick={() => router.push('/dashboard')}
-            className="mt-4"
-          >
-            Return to Dashboard
-          </Button>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Shop Not Found</h2>
+            <p className="text-muted-foreground">The requested shop could not be found.</p>
+            <Button 
+              onClick={() => router.push('/dashboard')}
+              className="mt-4"
+            >
+              Return to Dashboard
+            </Button>
+          </div>
         </div>
-      </div>
     )
   }
 
@@ -362,7 +363,7 @@ export default function ShopDashboardPage({ params }: { params: { id: string } }
               </div>
               <Button variant="outline" size="sm" onClick={() => router.push(`/shop/${shop.id}/products`)}>
                 View All Products
-              </Button>
+        </Button>
             </div>
           </CardHeader>
           <CardContent>

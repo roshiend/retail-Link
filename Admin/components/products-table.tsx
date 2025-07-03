@@ -270,11 +270,11 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
       })
     } catch (err) {
       console.error("Error deleting products:", err)
-      toast({
+    toast({
         variant: "destructive",
         title: "Failed to delete products",
         description: err instanceof Error ? err.message : "An unknown error occurred",
-      })
+    })
     } finally {
       setIsDeleting(false)
     }
@@ -332,7 +332,7 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2 text-lg">Loading products...</span>
         </div>
-              ) : sortedProducts.length === 0 ? (
+      ) : sortedProducts.length === 0 ? (
         <div className="text-center py-8 border rounded-md">
           <p className="text-lg font-medium">No products found</p>
           <p className="text-muted-foreground">
@@ -402,11 +402,11 @@ export function ProductsTable({ shopId }: ProductsTableProps) {
               {sortedProducts.map((product) => (
                 <TableRow key={product.id} className="group">
                   <TableCell>
-                                          <Checkbox
-                        checked={selectedProducts.includes(product.id)}
-                        onCheckedChange={() => toggleSelectProduct(product.id)}
+                    <Checkbox
+                      checked={selectedProducts.includes(product.id)}
+                      onCheckedChange={() => toggleSelectProduct(product.id)}
                         aria-label={`Select ${product.name}`}
-                      />
+                    />
                   </TableCell>
                   <TableCell>
                     <div className="h-10 w-10 rounded-md bg-gray-100 flex items-center justify-center">

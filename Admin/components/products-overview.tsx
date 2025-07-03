@@ -60,24 +60,24 @@ export function ProductsOverview({ shopId }: ProductsOverviewProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          // Show loading placeholders
-          Array(6)
-            .fill(0)
-            .map((_, i) => (
-              <div key={i} className="flex items-center space-x-4 rounded-md border p-4">
-                <div className="h-12 w-12 rounded-md bg-gray-200 animate-pulse" />
-                <div className="space-y-2 flex-1">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
-                </div>
-              </div>
-            ))
-        ) : recentProducts.length > 0 ? (
-          // Show actual products
-          recentProducts.map((product) => (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {isLoading ? (
+              // Show loading placeholders
+              Array(6)
+                .fill(0)
+                .map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4 rounded-md border p-4">
+                    <div className="h-12 w-12 rounded-md bg-gray-200 animate-pulse" />
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+                    </div>
+                  </div>
+                ))
+            ) : recentProducts.length > 0 ? (
+              // Show actual products
+              recentProducts.map((product) => (
             <Link 
               key={product.id} 
               href={`/shop/${shopId}/products/${product.id}`}
@@ -92,7 +92,7 @@ export function ProductsOverview({ shopId }: ProductsOverviewProps) {
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 )}
-              </div>
+                  </div>
               <div className="space-y-1 flex-1">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium">{product.name}</p>
@@ -105,14 +105,14 @@ export function ProductsOverview({ shopId }: ProductsOverviewProps) {
                 <p className="text-sm text-muted-foreground">${formatPrice(product.price)}</p>
               </div>
             </Link>
-          ))
-        ) : (
-          // Show empty state
-          <div className="col-span-3 text-center py-6">
-            <p className="text-muted-foreground">No products found. Add your first product to get started.</p>
+              ))
+            ) : (
+              // Show empty state
+              <div className="col-span-3 text-center py-6">
+                <p className="text-muted-foreground">No products found. Add your first product to get started.</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
   )
 }

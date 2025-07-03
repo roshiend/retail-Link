@@ -40,17 +40,17 @@ export default function LoginPage() {
     const password = formData.get("password") as string
 
     try {
-      const response = await api.login({ email, password })
+    const response = await api.login({ email, password })
 
-      if (response.error) {
-        setError(response.error)
+    if (response.error) {
+      setError(response.error)
         return
       }
 
       if (!response.data?.token || !response.data?.user) {
         setError("Invalid response from server")
-        return
-      }
+      return
+    }
 
       const { user, token } = response.data
 
@@ -59,7 +59,7 @@ export default function LoginPage() {
       
       // Check if user has a shop
       if (user.shop?.id) {
-        // Redirect to shop dashboard
+      // Redirect to shop dashboard
         router.push(`/shop/${user.shop.id}/dashboard`)
       } else {
         // User has no shops, redirect to dashboard to create one

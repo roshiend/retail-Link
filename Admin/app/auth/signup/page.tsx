@@ -94,8 +94,8 @@ export default function SignupPage() {
 
       if (!user || !token) {
         setError("Invalid response format from server")
-        return
-      }
+      return
+    }
 
       // Store the token
       localStorage.setItem("token", token)

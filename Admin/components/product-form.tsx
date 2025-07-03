@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useRouter } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
 import { RichTextEditor } from "@/components/rich-text-editor"
+import { API_BASE_URL } from "@/lib/api"
 
 // Define types for the dropdown data
 interface DropdownItem {
@@ -78,9 +79,10 @@ function SaveButton({ isSubmitting, isEditing }: { isSubmitting: boolean; isEdit
 // Define the props for the ProductForm component
 interface ProductFormProps {
   initialData?: any
+  shopId?: string | number
 }
 
-export function ProductForm({ initialData }: ProductFormProps = {}) {
+export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -212,14 +214,14 @@ export function ProductForm({ initialData }: ProductFormProps = {}) {
       setDropdownError(null)
 
       try {
-        // Fetch all dropdown data in parallel
+        // Fetch all dropdown data in parallel (shop-scoped)
         const [vendorsResponse, productTypesResponse, shopLocationsResponse, listingTypesResponse, categoriesResponse] =
           await Promise.all([
-            fetch("http://127.0.0.1:3000/api/v1/vendors"),
-            fetch("http://127.0.0.1:3000/api/v1/product_types"),
-            fetch("http://127.0.0.1:3000/api/v1/shop_locations"),
-            fetch("http://127.0.0.1:3000/api/v1/listing_types"),
-            fetch("http://127.0.0.1:3000/api/v1/categories"),
+            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/vendors`),
+            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/product_types`),
+            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/shop_locations`),
+            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/listing_types`),
+            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/categories`),
           ])
 
         // Check if all responses are OK
@@ -276,7 +278,7 @@ export function ProductForm({ initialData }: ProductFormProps = {}) {
     if (!categoryId) return
 
     try {
-      const response = await fetch(`http://127.0.0.1:3000/api/v1/categories/${categoryId}/sub_categories`)
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/categories/${categoryId}/sub_categories`)
 
       if (!response.ok) {
         throw new Error("Failed to fetch subcategories")
@@ -372,8 +374,8 @@ export function ProductForm({ initialData }: ProductFormProps = {}) {
 
       // Determine the API endpoint and method based on whether we're creating or updating
       const url = isEditing
-        ? `http://127.0.0.1:3000/api/v1/products/${initialData.id}`
-        : "http://127.0.0.1:3000/api/v1/products"
+        ? `${API_BASE_URL}/api/v1/shops/${shopId}/products/${initialData.id}`
+        : `${API_BASE_URL}/api/v1/shops/${shopId}/products`
 
       const method = isEditing ? "PUT" : "POST"
 
@@ -400,7 +402,7 @@ export function ProductForm({ initialData }: ProductFormProps = {}) {
 
       // Log the result and redirect to the products page
       console.log(isEditing ? "Product updated:" : "Product created:", result)
-      router.push("/dashboard/products")
+      router.push(`/shop/${shopId}/products`)
     } catch (error) {
       console.error(isEditing ? "Error updating product:" : "Error creating product:", error)
       setSubmitError(error instanceof Error ? error.message : "An unknown error occurred")
@@ -608,6 +610,7 @@ export function ProductForm({ initialData }: ProductFormProps = {}) {
                   initialVariants={initialVariants}
                   onOptionsChange={handleOptionsChange}
                   onVariantsChange={handleVariantsChange}
+                  shopId={shopId}
                 />
               </CardContent>
             </Card>

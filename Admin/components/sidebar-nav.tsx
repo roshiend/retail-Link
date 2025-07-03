@@ -10,48 +10,48 @@ export function SidebarNav() {
   const params = useParams()
   const shopId = params.id as string
 
-  const sidebarItems = [
-    {
-      title: "Home",
+const sidebarItems = [
+  {
+    title: "Home",
       href: `/shop/${shopId}/dashboard`,
-      icon: Home,
-    },
-    {
-      title: "Products",
+    icon: Home,
+  },
+  {
+    title: "Products",
       href: `/shop/${shopId}/products`,
-      icon: Package,
-    },
-    {
-      title: "Orders",
+    icon: Package,
+  },
+  {
+    title: "Orders",
       href: `/shop/${shopId}/orders`,
-      icon: ShoppingCart,
-    },
-    {
-      title: "Customers",
+    icon: ShoppingCart,
+  },
+  {
+    title: "Customers",
       href: `/shop/${shopId}/customers`,
-      icon: Users,
-    },
-    {
-      title: "Analytics",
+    icon: Users,
+  },
+  {
+    title: "Analytics",
       href: `/shop/${shopId}/analytics`,
-      icon: BarChart3,
-    },
-    {
-      title: "Discounts",
+    icon: BarChart3,
+  },
+  {
+    title: "Discounts",
       href: `/shop/${shopId}/discounts`,
-      icon: Tag,
-    },
-    {
-      title: "Apps",
+    icon: Tag,
+  },
+  {
+    title: "Apps",
       href: `/shop/${shopId}/apps`,
-      icon: Box,
-    },
-    {
-      title: "Settings",
+    icon: Box,
+  },
+  {
+    title: "Settings",
       href: `/shop/${shopId}/settings`,
-      icon: Settings,
-    },
-  ]
+    icon: Settings,
+  },
+]
 
   return (
     <nav className="grid gap-1">
