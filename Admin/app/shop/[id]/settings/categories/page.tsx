@@ -68,7 +68,7 @@ export default function CategoriesPage() {
     { name: "active", label: "Subcategory Active", type: "switch" as const },
   ]
 
-  const templateFields = ["name", "code", "description", "active"]
+  const templateFields = ["category_name", "category_code", "category_description", "category_active", "subcategory_name", "subcategory_code", "subcategory_description", "subcategory_active"]
 
   const fetchCategories = async () => {
     try {

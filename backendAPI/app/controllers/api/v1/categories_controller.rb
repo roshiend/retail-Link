@@ -51,48 +51,143 @@ class Api::V1::CategoriesController < Api::V1::BaseController
       csv_content = params[:file].read.force_encoding('UTF-8')
       csv_data = CSV.parse(csv_content, headers: true)
       
+      Rails.logger.info "Bulk upload: Processing #{csv_data.count} rows"
+      
       created_count = 0
       updated_count = 0
+      subcategories_created = 0
+      subcategories_updated = 0
       errors = []
 
+      # Group rows by category (assuming subcategories have a parent_category column)
+      categories_data = {}
+      
       csv_data.each_with_index do |row, index|
         row_number = index + 2 # +2 because of 0-based index and header row
         
-        # Convert string values to appropriate types
-        active = row['active'].to_s.downcase == 'true' if row['active'].present?
+        Rails.logger.debug "Processing row #{row_number}: #{row.to_h}"
         
+        # Convert string values to appropriate types
+        category_active = row['category_active'].to_s.downcase == 'true' if row['category_active'].present?
+        subcategory_active = row['subcategory_active'].to_s.downcase == 'true' if row['subcategory_active'].present?
+        
+        category_name = row['category_name']
+        subcategory_name = row['subcategory_name']
+        
+        if category_name.present?
+          # Initialize category data if not exists
+          categories_data[category_name] ||= {
+            name: category_name,
+            code: row['category_code'],
+            description: row['category_description'],
+            active: category_active.nil? ? true : category_active, # Default to true if not specified
+            subcategories: []
+          }
+          
+          # Add subcategory if present
+          if subcategory_name.present?
+            categories_data[category_name][:subcategories] << {
+              name: subcategory_name,
+              code: row['subcategory_code'],
+              description: row['subcategory_description'],
+              active: subcategory_active.nil? ? true : subcategory_active # Default to true if not specified
+            }
+          end
+        end
+      end
+      
+      Rails.logger.info "Bulk upload: Grouped into #{categories_data.keys.count} categories"
+
+      # Process each category and its subcategories
+      categories_data.each do |category_name, category_data|
         # Check if category already exists by name
-        existing_category = @shop.categories.find_by(name: row['name'])
+        existing_category = @shop.categories.find_by(name: category_name)
         
         if existing_category
-          # Update existing record
-          if existing_category.update(
-            description: row['description'],
-            active: active
-          )
+          # Update existing category
+          update_attributes = {}
+          update_attributes[:description] = category_data[:description] if category_data[:description].present?
+          update_attributes[:active] = category_data[:active] if category_data[:active] != nil
+          
+          if existing_category.update(update_attributes)
             updated_count += 1
+            
+            # Handle subcategories for existing category
+            if category_data[:subcategories].any?
+              category_data[:subcategories].each do |sub_data|
+                existing_sub = existing_category.subcategories.find_by(name: sub_data[:name])
+                
+                if existing_sub
+                  # Update existing subcategory
+                  sub_update_attributes = {}
+                  sub_update_attributes[:description] = sub_data[:description] if sub_data[:description].present?
+                  sub_update_attributes[:active] = sub_data[:active] if sub_data[:active] != nil
+                  
+                  if existing_sub.update(sub_update_attributes)
+                    subcategories_updated += 1
+                  else
+                    error_message = existing_sub.errors.full_messages.join(', ')
+                    errors << "Subcategory update error for '#{sub_data[:name]}': #{error_message}"
+                  end
+                else
+                  # Create new subcategory
+                  subcategory = existing_category.subcategories.build(
+                    name: sub_data[:name],
+                    code: sub_data[:code].present? ? sub_data[:code] : nil, # Let model handle auto-generation
+                    description: sub_data[:description],
+                    active: sub_data[:active]
+                  )
+                  subcategory.shop = @shop # Ensure shop is assigned
+                  
+                  if subcategory.save
+                    subcategories_created += 1
+                  else
+                    error_message = subcategory.errors.full_messages.join(', ')
+                    errors << "Subcategory create error for '#{sub_data[:name]}': #{error_message}"
+                  end
+                end
+              end
+            end
           else
             error_message = existing_category.errors.full_messages.join(', ')
-            errors << "Row #{row_number} (update): #{error_message}"
-            Rails.logger.error "Bulk upload update error for row #{row_number}: #{error_message}"
+            errors << "Category update error for '#{category_name}': #{error_message}"
+            Rails.logger.error "Bulk upload update error for category '#{category_name}': #{error_message}"
           end
         else
-          # Create new record
-          category_data = {
-            name: row['name'],
-            code: row['code'],
-            description: row['description'],
-            active: active
-          }
-
-          category = @shop.categories.build(category_data)
+          # Create new category
+          category = @shop.categories.build(
+            name: category_data[:name],
+            code: category_data[:code].present? ? category_data[:code] : nil, # Let model handle auto-generation
+            description: category_data[:description],
+            active: category_data[:active]
+          )
           
           if category.save
             created_count += 1
+            
+            # Create subcategories for new category
+            if category_data[:subcategories].any?
+              category_data[:subcategories].each do |sub_data|
+                subcategory = category.subcategories.build(
+                  name: sub_data[:name],
+                  code: sub_data[:code].present? ? sub_data[:code] : nil, # Let model handle auto-generation
+                  description: sub_data[:description],
+                  active: sub_data[:active]
+                )
+                subcategory.shop = @shop # Ensure shop is assigned
+                
+                if subcategory.save
+                  subcategories_created += 1
+                else
+                  error_message = subcategory.errors.full_messages.join(', ')
+                  errors << "Subcategory create error for '#{sub_data[:name]}': #{error_message}"
+                end
+              end
+            end
           else
             error_message = category.errors.full_messages.join(', ')
-            errors << "Row #{row_number} (create): #{error_message}"
-            Rails.logger.error "Bulk upload create error for row #{row_number}: #{error_message}"
+            errors << "Category create error for '#{category_name}': #{error_message}"
+            Rails.logger.error "Bulk upload create error for category '#{category_name}': #{error_message}"
           end
         end
       end
@@ -101,14 +196,18 @@ class Api::V1::CategoriesController < Api::V1::BaseController
         render json: { 
           created_count: created_count,
           updated_count: updated_count,
+          subcategories_created: subcategories_created,
+          subcategories_updated: subcategories_updated,
           errors: errors,
-          message: "Created #{created_count} and updated #{updated_count} categories with #{errors.length} errors"
+          message: "Created #{created_count} and updated #{updated_count} categories, created #{subcategories_created} and updated #{subcategories_updated} subcategories with #{errors.length} errors"
         }, status: :partial_content
       else
         render json: { 
           created_count: created_count,
           updated_count: updated_count,
-          message: "Successfully created #{created_count} and updated #{updated_count} categories"
+          subcategories_created: subcategories_created,
+          subcategories_updated: subcategories_updated,
+          message: "Successfully created #{created_count} and updated #{updated_count} categories, created #{subcategories_created} and updated #{subcategories_updated} subcategories"
         }
       end
     rescue CSV::MalformedCSVError => e

@@ -51,17 +51,10 @@ export function SettingsTabs() {
     },
     {
       title: "Categories",
-      description: "Organize products with main categories",
+      description: "Organize products with main categories and subcategories",
       icon: FolderOpen,
       href: `/shop/${shopId}/settings/categories`,
       color: "text-indigo-600"
-    },
-    {
-      title: "Subcategories",
-      description: "Manage subcategories within each category",
-      icon: Folder,
-      href: `/shop/${shopId}/settings/subcategories`,
-      color: "text-cyan-600"
     }
   ]
 

@@ -85,9 +85,20 @@ export function CsvUpload({ title, endpoint, shopId, templateFields, onSuccess }
 
       if (response.ok) {
         const result = await response.json()
+        let description = `Successfully uploaded ${result.created_count} ${title.toLowerCase()}`
+        
+        // Handle subcategory counts if present (for categories)
+        if (result.subcategories_created !== undefined || result.subcategories_updated !== undefined) {
+          const subCreated = result.subcategories_created || 0
+          const subUpdated = result.subcategories_updated || 0
+          if (subCreated > 0 || subUpdated > 0) {
+            description += ` with ${subCreated} new and ${subUpdated} updated subcategories`
+          }
+        }
+        
         toast({
           title: "Success",
-          description: `Successfully uploaded ${result.created_count} ${title.toLowerCase()}`,
+          description: description,
         })
         setIsOpen(false)
         setFile(null)
@@ -134,6 +145,15 @@ export function CsvUpload({ title, endpoint, shopId, templateFields, onSuccess }
         case 'email': return 'location@example.com'
         case 'active': return 'true'
         case 'primary': return 'false'
+        // Category and subcategory fields
+        case 'category_name': return 'Electronics'
+        case 'category_code': return '001'
+        case 'category_description': return 'Electronic devices and gadgets'
+        case 'category_active': return 'true'
+        case 'subcategory_name': return 'Smartphones'
+        case 'subcategory_code': return '001'
+        case 'subcategory_description': return 'Mobile phones and smartphones'
+        case 'subcategory_active': return 'true'
         default: return 'Sample Value'
       }
     }).join(',')
@@ -162,7 +182,10 @@ export function CsvUpload({ title, endpoint, shopId, templateFields, onSuccess }
         <DialogHeader>
           <DialogTitle>Bulk Upload {title}</DialogTitle>
           <DialogDescription>
-            Upload a CSV file to create multiple {title.toLowerCase()} at once.
+            {title === "Categories" 
+              ? "Upload a CSV file to create multiple categories and subcategories at once. Each row can include both category and subcategory information."
+              : `Upload a CSV file to create multiple ${title.toLowerCase()} at once.`
+            }
           </DialogDescription>
         </DialogHeader>
         

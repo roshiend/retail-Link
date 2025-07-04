@@ -1,11 +1,24 @@
-name,code,description,active
-Electronics,001,Electronic devices and gadgets,true
-Clothing & Apparel,002,All types of clothing and fashion items,true
-Home & Garden,003,Home improvement and garden products,true
-Sports & Fitness,004,Sports equipment and fitness gear,true
-Books & Education,005,Books, educational materials, and courses,true
-Automotive,006,Vehicle parts, accessories, and services,true
-Health & Beauty,007,Health products and beauty supplies,true
-Toys & Entertainment,008,Toys, games, and entertainment products,true
-Food & Beverages,009,Food, drinks, and consumables,true
-Jewelry & Accessories,010,Fine jewelry, watches, and accessories,true
+category_name,category_code,category_description,category_active,subcategory_name,subcategory_code,subcategory_description,subcategory_active
+Electronics,001,Electronic devices and gadgets,true,Smartphones,001,Mobile phones and smartphones,true
+Electronics,001,Electronic devices and gadgets,true,Laptops,002,Portable computers and laptops,true
+Electronics,001,Electronic devices and gadgets,true,Tablets,003,Tablet computers and iPads,true
+Clothing & Apparel,002,All types of clothing and fashion items,true,Men's Clothing,001,Clothing for men,true
+Clothing & Apparel,002,All types of clothing and fashion items,true,Women's Clothing,002,Clothing for women,true
+Clothing & Apparel,002,All types of clothing and fashion items,true,Kids' Clothing,003,Clothing for children,true
+Home & Garden,003,Home improvement and garden products,true,Furniture,001,Home and office furniture,true
+Home & Garden,003,Home improvement and garden products,true,Garden Tools,002,Gardening equipment and tools,true
+Home & Garden,003,Home improvement and garden products,true,Kitchen Appliances,003,Cooking and kitchen equipment,true
+Sports & Fitness,004,Sports equipment and fitness gear,true,Team Sports,001,Sports equipment for team games,true
+Sports & Fitness,004,Sports equipment and fitness gear,true,Fitness Equipment,002,Exercise and fitness machines,true
+Books & Education,005,Books, educational materials, and courses,true,Fiction Books,001,Novels and fiction literature,true
+Books & Education,005,Books, educational materials, and courses,true,Non-Fiction Books,002,Educational and reference books,true
+Automotive,006,Vehicle parts, accessories, and services,true,Car Parts,001,Automotive parts and components,true
+Automotive,006,Vehicle parts, accessories, and services,true,Car Accessories,002,Vehicle accessories and add-ons,true
+Health & Beauty,007,Health products and beauty supplies,true,Skincare,001,Skin care products and treatments,true
+Health & Beauty,007,Health products and beauty supplies,true,Cosmetics,002,Makeup and beauty products,true
+Toys & Entertainment,008,Toys, games, and entertainment products,true,Board Games,001,Traditional and modern board games,true
+Toys & Entertainment,008,Toys, games, and entertainment products,true,Video Games,002,Digital games and gaming accessories,true
+Food & Beverages,009,Food, drinks, and consumables,true,Snacks,001,Processed snacks and treats,true
+Food & Beverages,009,Food, drinks, and consumables,true,Beverages,002,Drinks and liquid refreshments,true
+Jewelry & Accessories,010,Fine jewelry, watches, and accessories,true,Necklaces,001,Jewelry for the neck area,true
+Jewelry & Accessories,010,Fine jewelry, watches, and accessories,true,Watches,002,Timepieces and wristwatches,true
