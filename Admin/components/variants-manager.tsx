@@ -78,9 +78,25 @@ export function VariantsManager({
     const fetchOptionTypes = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/option_type_sets`)
+        const token = localStorage.getItem('token')
+        if (!token) {
+          throw new Error('No authentication token found')
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/option_type_sets`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        })
 
         if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('token')
+            // Note: We can't use toast or router here as they're not available in this component
+            // The parent component should handle this
+            throw new Error('Session expired')
+          }
           throw new Error("Failed to fetch option types")
         }
 
@@ -89,7 +105,11 @@ export function VariantsManager({
         setError(null)
       } catch (err) {
         console.error("Error fetching option types:", err)
-        setError("Failed to load option types. Please refresh and try again.")
+        if (err instanceof Error && err.message === 'Session expired') {
+          setError("Session expired. Please refresh the page to login again.")
+        } else {
+          setError("Failed to load option types. Please refresh and try again.")
+        }
         // Remove the fallback option types
         setOptionTypes([])
       } finally {
@@ -98,7 +118,7 @@ export function VariantsManager({
     }
 
     fetchOptionTypes()
-  }, [])
+  }, [shopId])
 
   // Automatically generate variants when options change
   useEffect(() => {

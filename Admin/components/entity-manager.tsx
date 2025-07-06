@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, Edit, Trash2, Search } from "lucide-react"
 import { API_BASE_URL } from "@/lib/api"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { CsvUpload } from "./csv-upload"
 
@@ -41,6 +42,7 @@ interface EntityManagerProps {
 
 export function EntityManager({ title, description, endpoint, templateFields, fields }: EntityManagerProps) {
   const params = useParams()
+  const router = useRouter()
   const shopId = params.id as string
   const [entities, setEntities] = useState<Entity[]>([])
   const [loading, setLoading] = useState(true)
@@ -49,6 +51,8 @@ export function EntityManager({ title, description, endpoint, templateFields, fi
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingEntity, setEditingEntity] = useState<Entity | null>(null)
   const [formData, setFormData] = useState<Record<string, any>>({})
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [deleting, setDeleting] = useState(false)
 
   const fetchEntities = async () => {
     try {
@@ -76,9 +80,11 @@ export function EntityManager({ title, description, endpoint, templateFields, fi
         localStorage.removeItem('token')
         toast({
           title: "Session Expired",
-          description: "Please login again",
+          description: "Redirecting to login...",
           variant: "destructive",
         })
+        router.push('/')
+        return
       } else {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || `Failed to fetch ${title.toLowerCase()}`)
@@ -132,9 +138,11 @@ export function EntityManager({ title, description, endpoint, templateFields, fi
         localStorage.removeItem('token')
         toast({
           title: "Session Expired",
-          description: "Please login again",
+          description: "Redirecting to login...",
           variant: "destructive",
         })
+        router.push('/')
+        return
       } else {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || `Failed to create ${title.slice(0, -1).toLowerCase()}`)
@@ -185,9 +193,11 @@ export function EntityManager({ title, description, endpoint, templateFields, fi
         localStorage.removeItem('token')
         toast({
           title: "Session Expired",
-          description: "Please login again",
+          description: "Redirecting to login...",
           variant: "destructive",
         })
+        router.push('/')
+        return
       } else {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || `Failed to update ${title.slice(0, -1).toLowerCase()}`)
@@ -231,9 +241,11 @@ export function EntityManager({ title, description, endpoint, templateFields, fi
         localStorage.removeItem('token')
         toast({
           title: "Session Expired",
-          description: "Please login again",
+          description: "Redirecting to login...",
           variant: "destructive",
         })
+        router.push('/')
+        return
       } else {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || `Failed to delete ${title.slice(0, -1).toLowerCase()}`)
@@ -244,6 +256,86 @@ export function EntityManager({ title, description, endpoint, templateFields, fi
         description: error instanceof Error ? error.message : "Failed to delete item",
         variant: "destructive",
       })
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+
+    setDeleting(true)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please login again",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/${endpoint}/bulk_delete`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ ids: selectedIds }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        let description = `Successfully deleted ${result.deleted_count} ${title.toLowerCase()}`
+        
+        // Handle subcategory counts if present (for categories)
+        if (result.subcategories_deleted !== undefined) {
+          description += ` and ${result.subcategories_deleted} subcategories`
+        }
+        
+        toast({
+          title: "Success",
+          description: description,
+        })
+        setSelectedIds([])
+        fetchEntities()
+      } else if (response.status === 401) {
+        localStorage.removeItem('token')
+        toast({
+          title: "Session Expired",
+          description: "Redirecting to login...",
+          variant: "destructive",
+        })
+        router.push('/')
+        return
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to delete ${title.toLowerCase()}`)
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete items",
+        variant: "destructive",
+      })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredEntities.map(entity => entity.id))
+    } else {
+      setSelectedIds([])
+    }
+  }
+
+  const handleSelectItem = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds([...selectedIds, id])
+    } else {
+      setSelectedIds(selectedIds.filter(selectedId => selectedId !== id))
     }
   }
 
@@ -370,10 +462,38 @@ export function EntityManager({ title, description, endpoint, templateFields, fi
 
       <Card>
         <CardHeader>
-          <CardTitle>All {title}</CardTitle>
-          <CardDescription>
-            Manage your {title.toLowerCase()}. You can create, edit, and delete items.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>All {title}</CardTitle>
+              <CardDescription>
+                Manage your {title.toLowerCase()}. You can create, edit, and delete items.
+              </CardDescription>
+            </div>
+            {selectedIds.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={deleting}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {deleting ? "Deleting..." : `Delete ${selectedIds.length} Selected`}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete {selectedIds.length} selected {title.toLowerCase()}.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleBulkDelete}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
           <div className="flex items-center space-x-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
@@ -388,6 +508,12 @@ export function EntityManager({ title, description, endpoint, templateFields, fi
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedIds.length === filteredEntities.length && filteredEntities.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
@@ -398,6 +524,12 @@ export function EntityManager({ title, description, endpoint, templateFields, fi
             <TableBody>
               {filteredEntities.map((entity) => (
                 <TableRow key={entity.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.includes(entity.id)}
+                      onCheckedChange={(checked) => handleSelectItem(entity.id, checked as boolean)}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono">{entity.code}</TableCell>
                   <TableCell className="font-medium">{entity.name}</TableCell>
                   <TableCell>{entity.description || "-"}</TableCell>

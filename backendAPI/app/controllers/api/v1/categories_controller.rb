@@ -36,6 +36,50 @@ class Api::V1::CategoriesController < Api::V1::BaseController
     head :no_content
   end
 
+  def bulk_delete
+    category_ids = params[:ids]
+    
+    unless category_ids.is_a?(Array) && category_ids.any?
+      render json: { error: 'Please provide an array of category IDs to delete' }, status: :unprocessable_entity
+      return
+    end
+
+    begin
+      # Find categories that belong to this shop
+      categories_to_delete = @shop.categories.where(id: category_ids)
+      deleted_count = categories_to_delete.count
+      
+      # Count subcategories that will be deleted
+      subcategories_deleted = 0
+      categories_to_delete.each do |category|
+        subcategories_deleted += category.subcategories.count
+      end
+      
+      # Check if any products are using these categories
+      products_using_categories = Product.where(category_id: category_ids, shop_id: @shop.id)
+      
+      if products_using_categories.any?
+        category_names = categories_to_delete.pluck(:name).join(', ')
+        render json: { 
+          error: "Cannot delete categories that are being used by products. Categories: #{category_names}" 
+        }, status: :unprocessable_entity
+        return
+      end
+
+      # Delete the categories (this will also delete associated subcategories due to dependent: :destroy)
+      categories_to_delete.destroy_all
+
+      render json: { 
+        deleted_count: deleted_count,
+        subcategories_deleted: subcategories_deleted,
+        message: "Successfully deleted #{deleted_count} categories and #{subcategories_deleted} subcategories"
+      }
+    rescue StandardError => e
+      Rails.logger.error "Bulk delete error: #{e.message}"
+      render json: { error: "Delete failed: #{e.message}" }, status: :unprocessable_entity
+    end
+  end
+
   def subcategories
     @subcategories = @category.subcategories
     render json: @subcategories

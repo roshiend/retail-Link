@@ -36,6 +36,43 @@ class Api::V1::ShopLocationsController < Api::V1::BaseController
     head :no_content
   end
 
+  def bulk_delete
+    shop_location_ids = params[:ids]
+    
+    unless shop_location_ids.is_a?(Array) && shop_location_ids.any?
+      render json: { error: 'Please provide an array of shop location IDs to delete' }, status: :unprocessable_entity
+      return
+    end
+
+    begin
+      # Find shop locations that belong to this shop
+      shop_locations_to_delete = @shop.shop_locations.where(id: shop_location_ids)
+      deleted_count = shop_locations_to_delete.count
+      
+      # Check if any products are using these shop locations
+      products_using_locations = Product.where(shop_location_id: shop_location_ids, shop_id: @shop.id)
+      
+      if products_using_locations.any?
+        location_names = shop_locations_to_delete.pluck(:name).join(', ')
+        render json: { 
+          error: "Cannot delete shop locations that are being used by products. Shop locations: #{location_names}" 
+        }, status: :unprocessable_entity
+        return
+      end
+
+      # Delete the shop locations
+      shop_locations_to_delete.destroy_all
+
+      render json: { 
+        deleted_count: deleted_count,
+        message: "Successfully deleted #{deleted_count} shop locations"
+      }
+    rescue StandardError => e
+      Rails.logger.error "Bulk delete error: #{e.message}"
+      render json: { error: "Delete failed: #{e.message}" }, status: :unprocessable_entity
+    end
+  end
+
   def bulk_upload
     unless params[:file] && params[:file].content_type == 'text/csv'
       render json: { error: 'Please upload a valid CSV file' }, status: :unprocessable_entity

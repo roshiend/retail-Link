@@ -1,6 +1,6 @@
 class ShopLocation < ApplicationRecord
   belongs_to :shop
-
+  has_many :products, dependent: :nullify
   validates :name, presence: true
   validates :name, uniqueness: { scope: :shop_id }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true

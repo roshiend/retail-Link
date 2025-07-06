@@ -108,6 +108,7 @@ ActiveRecord::Schema[8.0].define(version: 2024_03_20_000014) do
     t.bigint "listing_type_id"
     t.bigint "category_id"
     t.bigint "subcategory_id"
+    t.bigint "shop_location_id"
     t.index ["category_id"], name: "index_products_on_category_id"
     t.index ["listing_type_id"], name: "index_products_on_listing_type_id"
     t.index ["product_type_id"], name: "index_products_on_product_type_id"

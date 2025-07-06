@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Upload, Download, FileText, AlertCircle, CheckCircle } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { API_BASE_URL } from "@/lib/api"
+import { useRouter } from "next/navigation"
 
 interface CsvUploadProps {
   title: string
@@ -19,6 +20,7 @@ interface CsvUploadProps {
 }
 
 export function CsvUpload({ title, endpoint, shopId, templateFields, onSuccess }: CsvUploadProps) {
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -108,9 +110,11 @@ export function CsvUpload({ title, endpoint, shopId, templateFields, onSuccess }
         localStorage.removeItem('token')
         toast({
           title: "Session Expired",
-          description: "Please login again",
+          description: "Redirecting to login...",
           variant: "destructive",
         })
+        router.push('/')
+        return
       } else {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || `Failed to upload ${title.toLowerCase()}`)

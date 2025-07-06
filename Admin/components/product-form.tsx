@@ -214,15 +214,59 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
       setDropdownError(null)
 
       try {
+        const token = localStorage.getItem('token')
+        if (!token) {
+          throw new Error('No authentication token found')
+        }
+
         // Fetch all dropdown data in parallel (shop-scoped)
         const [vendorsResponse, productTypesResponse, shopLocationsResponse, listingTypesResponse, categoriesResponse] =
           await Promise.all([
-            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/vendors`),
-            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/product_types`),
-            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/shop_locations`),
-            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/listing_types`),
-            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/categories`),
+            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/vendors`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+              }
+            }),
+            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/product_types`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+              }
+            }),
+            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/shop_locations`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+              }
+            }),
+            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/listing_types`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+              }
+            }),
+            fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/categories`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+              }
+            }),
           ])
+
+        // Check if any response is 401 (unauthorized)
+        if (vendorsResponse.status === 401 || productTypesResponse.status === 401 || 
+            shopLocationsResponse.status === 401 || listingTypesResponse.status === 401 || 
+            categoriesResponse.status === 401) {
+          localStorage.removeItem('token')
+          toast({
+            title: "Session expired",
+            description: "Please login again to continue.",
+            variant: "destructive",
+          })
+          router.push('/')
+          return
+        }
 
         // Check if all responses are OK
         if (
@@ -278,9 +322,29 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
     if (!categoryId) return
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/categories/${categoryId}/sub_categories`)
+      const token = localStorage.getItem('token')
+      if (!token) {
+        throw new Error('No authentication token found')
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/categories/${categoryId}/sub_categories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      })
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token')
+          toast({
+            title: "Session expired",
+            description: "Please login again to continue.",
+            variant: "destructive",
+          })
+          router.push('/')
+          return
+        }
         throw new Error("Failed to fetch subcategories")
       }
 
@@ -379,16 +443,34 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
 
       const method = isEditing ? "PUT" : "POST"
 
+      // Get authentication token
+      const token = localStorage.getItem('token')
+      if (!token) {
+        throw new Error('No authentication token found')
+      }
+
       // Send the data to the API
       const response = await fetch(url, {
         method: method,
         headers: {
+          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
+          "Accept": "application/json"
         },
         body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token')
+          toast({
+            title: "Session expired",
+            description: "Please login again to continue.",
+            variant: "destructive",
+          })
+          router.push('/')
+          return
+        }
         const errorData = await response.json()
         throw new Error(errorData.error || `Failed to ${isEditing ? "update" : "create"} product`)
       }

@@ -12,9 +12,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, Edit, Trash2, Search, FolderOpen, Folder, X } from "lucide-react"
 import { API_BASE_URL } from "@/lib/api"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { CsvUpload } from "@/components/csv-upload"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface Category {
   id: number
@@ -43,6 +44,7 @@ interface SubcategoryFormData {
 
 export default function CategoriesPage() {
   const params = useParams()
+  const router = useRouter()
   const shopId = params.id as string
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,6 +55,8 @@ export default function CategoriesPage() {
   const [categoryFormData, setCategoryFormData] = useState<Record<string, any>>({})
   const [subcategoriesFormData, setSubcategoriesFormData] = useState<SubcategoryFormData[]>([])
   const [editingSubcategories, setEditingSubcategories] = useState<Subcategory[]>([])
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [deleting, setDeleting] = useState(false)
 
   const categoryFields = [
     { name: "name", label: "Category Name", type: "text" as const, required: true },
@@ -96,9 +100,11 @@ export default function CategoriesPage() {
         localStorage.removeItem('token')
         toast({
           title: "Session Expired",
-          description: "Please login again",
+          description: "Redirecting to login...",
           variant: "destructive",
         })
+        router.push('/')
+        return
       } else {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || 'Failed to fetch categories')
@@ -330,6 +336,85 @@ export default function CategoriesPage() {
     }
   }
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+
+    setDeleting(true)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please login again",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/categories/bulk_delete`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ ids: selectedIds }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        let description = `Successfully deleted ${result.deleted_count} categories`
+        
+        if (result.subcategories_deleted !== undefined) {
+          description += ` and ${result.subcategories_deleted} subcategories`
+        }
+        
+        toast({
+          title: "Success",
+          description: description,
+        })
+        setSelectedIds([])
+        fetchCategories()
+      } else if (response.status === 401) {
+        localStorage.removeItem('token')
+        toast({
+          title: "Session Expired",
+          description: "Redirecting to login...",
+          variant: "destructive",
+        })
+        router.push('/')
+        return
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || "Failed to delete categories")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete items",
+        variant: "destructive",
+      })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredCategories.map(category => category.id))
+    } else {
+      setSelectedIds([])
+    }
+  }
+
+  const handleSelectItem = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds([...selectedIds, id])
+    } else {
+      setSelectedIds(selectedIds.filter(selectedId => selectedId !== id))
+    }
+  }
+
   const openEditDialog = (category: Category) => {
     setEditingCategory(category)
     setCategoryFormData({
@@ -547,10 +632,38 @@ export default function CategoriesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Categories</CardTitle>
-          <CardDescription>
-            Manage your categories. You can create, edit, and delete items.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>All Categories</CardTitle>
+              <CardDescription>
+                Manage your categories. You can create, edit, and delete items.
+              </CardDescription>
+            </div>
+            {selectedIds.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={deleting}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {deleting ? "Deleting..." : `Delete ${selectedIds.length} Selected`}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete {selectedIds.length} selected categories and all their subcategories.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleBulkDelete}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
           <div className="flex items-center space-x-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
@@ -565,6 +678,12 @@ export default function CategoriesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedIds.length === filteredCategories.length && filteredCategories.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
@@ -576,6 +695,12 @@ export default function CategoriesPage() {
             <TableBody>
               {filteredCategories.map((category) => (
                 <TableRow key={category.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.includes(category.id)}
+                      onCheckedChange={(checked) => handleSelectItem(category.id, checked as boolean)}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono">{category.code}</TableCell>
                   <TableCell className="font-medium">{category.name}</TableCell>
                   <TableCell>{category.description || "-"}</TableCell>

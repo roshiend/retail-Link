@@ -36,6 +36,43 @@ class Api::V1::ListingTypesController < Api::V1::BaseController
     head :no_content
   end
 
+  def bulk_delete
+    listing_type_ids = params[:ids]
+    
+    unless listing_type_ids.is_a?(Array) && listing_type_ids.any?
+      render json: { error: 'Please provide an array of listing type IDs to delete' }, status: :unprocessable_entity
+      return
+    end
+
+    begin
+      # Find listing types that belong to this shop
+      listing_types_to_delete = @shop.listing_types.where(id: listing_type_ids)
+      deleted_count = listing_types_to_delete.count
+      
+      # Check if any products are using these listing types
+      products_using_types = Product.where(listing_type_id: listing_type_ids, shop_id: @shop.id)
+      
+      if products_using_types.any?
+        type_names = listing_types_to_delete.pluck(:name).join(', ')
+        render json: { 
+          error: "Cannot delete listing types that are being used by products. Listing types: #{type_names}" 
+        }, status: :unprocessable_entity
+        return
+      end
+
+      # Delete the listing types
+      listing_types_to_delete.destroy_all
+
+      render json: { 
+        deleted_count: deleted_count,
+        message: "Successfully deleted #{deleted_count} listing types"
+      }
+    rescue StandardError => e
+      Rails.logger.error "Bulk delete error: #{e.message}"
+      render json: { error: "Delete failed: #{e.message}" }, status: :unprocessable_entity
+    end
+  end
+
   def bulk_upload
     unless params[:file] && params[:file].content_type == 'text/csv'
       render json: { error: 'Please upload a valid CSV file' }, status: :unprocessable_entity

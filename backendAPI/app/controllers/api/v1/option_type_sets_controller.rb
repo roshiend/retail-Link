@@ -36,6 +36,32 @@ class Api::V1::OptionTypeSetsController < Api::V1::BaseController
     head :no_content
   end
 
+  def bulk_delete
+    option_type_set_ids = params[:ids]
+    
+    unless option_type_set_ids.is_a?(Array) && option_type_set_ids.any?
+      render json: { error: 'Please provide an array of option type set IDs to delete' }, status: :unprocessable_entity
+      return
+    end
+
+    begin
+      # Find option type sets that belong to this shop
+      option_type_sets_to_delete = @shop.option_type_sets.where(id: option_type_set_ids)
+      deleted_count = option_type_sets_to_delete.count
+      
+      # Delete the option type sets (no product dependency check needed)
+      option_type_sets_to_delete.destroy_all
+
+      render json: { 
+        deleted_count: deleted_count,
+        message: "Successfully deleted #{deleted_count} option type sets"
+      }
+    rescue StandardError => e
+      Rails.logger.error "Bulk delete error: #{e.message}"
+      render json: { error: "Delete failed: #{e.message}" }, status: :unprocessable_entity
+    end
+  end
+
   def bulk_upload
     unless params[:file] && params[:file].content_type == 'text/csv'
       render json: { error: 'Please upload a valid CSV file' }, status: :unprocessable_entity

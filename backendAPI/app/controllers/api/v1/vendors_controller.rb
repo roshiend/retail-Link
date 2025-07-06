@@ -36,6 +36,43 @@ class Api::V1::VendorsController < Api::V1::BaseController
     head :no_content
   end
 
+  def bulk_delete
+    vendor_ids = params[:ids]
+    
+    unless vendor_ids.is_a?(Array) && vendor_ids.any?
+      render json: { error: 'Please provide an array of vendor IDs to delete' }, status: :unprocessable_entity
+      return
+    end
+
+    begin
+      # Find vendors that belong to this shop
+      vendors_to_delete = @shop.vendors.where(id: vendor_ids)
+      deleted_count = vendors_to_delete.count
+      
+      # Check if any products are using these vendors
+      products_using_vendors = Product.where(vendor_id: vendor_ids, shop_id: @shop.id)
+      
+      if products_using_vendors.any?
+        vendor_names = vendors_to_delete.pluck(:name).join(', ')
+        render json: { 
+          error: "Cannot delete vendors that are being used by products. Vendors: #{vendor_names}" 
+        }, status: :unprocessable_entity
+        return
+      end
+
+      # Delete the vendors
+      vendors_to_delete.destroy_all
+
+      render json: { 
+        deleted_count: deleted_count,
+        message: "Successfully deleted #{deleted_count} vendors"
+      }
+    rescue StandardError => e
+      Rails.logger.error "Bulk delete error: #{e.message}"
+      render json: { error: "Delete failed: #{e.message}" }, status: :unprocessable_entity
+    end
+  end
+
   def bulk_upload
     unless params[:file] && params[:file].content_type == 'text/csv'
       render json: { error: 'Please upload a valid CSV file' }, status: :unprocessable_entity

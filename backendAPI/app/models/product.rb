@@ -5,6 +5,7 @@ class Product < ApplicationRecord
   belongs_to :listing_type, optional: true
   belongs_to :category, optional: true
   belongs_to :subcategory, optional: true
+  belongs_to :shop_location, optional: true
   has_many :option_types, dependent: :destroy
 
   validates :name, presence: true

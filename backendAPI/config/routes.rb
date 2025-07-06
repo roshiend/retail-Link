@@ -38,6 +38,7 @@ Rails.application.routes.draw do
         resources :vendors do
           collection do
             post 'bulk_upload'
+            post 'bulk_delete'
           end
         end
 
@@ -45,6 +46,7 @@ Rails.application.routes.draw do
         resources :product_types do
           collection do
             post 'bulk_upload'
+            post 'bulk_delete'
           end
         end
 
@@ -52,6 +54,7 @@ Rails.application.routes.draw do
         resources :listing_types do
           collection do
             post 'bulk_upload'
+            post 'bulk_delete'
           end
         end
 
@@ -59,6 +62,7 @@ Rails.application.routes.draw do
         resources :shop_locations do
           collection do
             post 'bulk_upload'
+            post 'bulk_delete'
           end
         end
 
@@ -69,6 +73,7 @@ Rails.application.routes.draw do
           end
           collection do
             post 'bulk_upload'
+            post 'bulk_delete'
           end
         end
 
@@ -85,6 +90,7 @@ Rails.application.routes.draw do
         resources :option_type_sets do
           collection do
             post 'bulk_upload'
+            post 'bulk_delete'
           end
         end
       end

@@ -5,5 +5,6 @@ class AddReferencesToProducts < ActiveRecord::Migration[8.0]
     add_reference :products, :listing_type, null: true, foreign_key: true
     add_reference :products, :category, null: true, foreign_key: true
     add_reference :products, :subcategory, null: true, foreign_key: true
+    add_reference :products, :shop_location, null: true, foreign_key: true
   end
 end 
