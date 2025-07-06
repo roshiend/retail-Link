@@ -310,6 +310,7 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
 
   // Fetch subcategories when category changes
   useEffect(() => {
+    console.log('Category changed to:', selectedCategoryId)
     if (selectedCategoryId) {
       fetchSubCategories(selectedCategoryId)
     } else {
@@ -327,7 +328,7 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
         throw new Error('No authentication token found')
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/categories/${categoryId}/sub_categories`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/shops/${shopId}/categories/${categoryId}/subcategories`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -349,6 +350,7 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
       }
 
       const data = await response.json()
+      console.log('Fetched subcategories for category', categoryId, ':', data)
       setSubCategories(data)
 
       // Clear the subcategory selection if the current selection doesn't belong to this category
@@ -919,7 +921,7 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
                         <SelectContent>
                           {categories.map((category) => (
                             <SelectItem key={category.id} value={category.id.toString()}>
-                              {category.value}
+                              {category.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -956,7 +958,7 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
                         <SelectContent>
                           {subCategories.map((subCategory) => (
                             <SelectItem key={subCategory.id} value={subCategory.id.toString()}>
-                              {subCategory.value}
+                              {subCategory.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
