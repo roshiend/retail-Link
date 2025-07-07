@@ -464,10 +464,10 @@ export function EntityManager({ title, description, endpoint, templateFields, fi
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>All {title}</CardTitle>
-              <CardDescription>
-                Manage your {title.toLowerCase()}. You can create, edit, and delete items.
-              </CardDescription>
+          <CardTitle>All {title}</CardTitle>
+          <CardDescription>
+            Manage your {title.toLowerCase()}. You can create, edit, and delete items.
+          </CardDescription>
             </div>
             {selectedIds.length > 0 && (
               <AlertDialog>

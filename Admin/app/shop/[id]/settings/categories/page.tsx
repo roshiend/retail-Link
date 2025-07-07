@@ -634,10 +634,10 @@ export default function CategoriesPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>All Categories</CardTitle>
-              <CardDescription>
-                Manage your categories. You can create, edit, and delete items.
-              </CardDescription>
+          <CardTitle>All Categories</CardTitle>
+          <CardDescription>
+            Manage your categories. You can create, edit, and delete items.
+          </CardDescription>
             </div>
             {selectedIds.length > 0 && (
               <AlertDialog>

@@ -96,7 +96,7 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
     resolver: zodResolver(productFormSchema),
     defaultValues: isEditing
       ? {
-          title: initialData.title || "",
+          title: initialData.title || initialData.name || "",
           description: initialData.description || "",
           price: Number.parseFloat(initialData.price) || 0,
           compareAtPrice: initialData.compare_at_price ? Number.parseFloat(initialData.compare_at_price) : undefined,
@@ -104,13 +104,13 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
           barcode: initialData.barcode || "",
           weight: initialData.weight,
           weight_unit: initialData.weight_unit || "kg",
-          inventory: initialData.inventory,
-          status: initialData.status || "draft",
+          inventory: initialData.inventory || initialData.stock_quantity || 0,
+          status: initialData.status || (initialData.active ? "active" : "draft"),
           vendor_id: initialData.vendor_id,
           product_type_id: initialData.product_type_id,
           shop_location_id: initialData.shop_location_id,
           category_id: initialData.category_id,
-          sub_category_id: initialData.sub_category_id,
+          sub_category_id: initialData.sub_category_id || initialData.subcategory_id,
           listing_type_id: initialData.listing_type_id,
         }
       : {
@@ -146,7 +146,7 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
     if (isEditing && initialData) {
       console.log("Resetting form with new data")
       form.reset({
-        title: initialData.title || "",
+        title: initialData.title || initialData.name || "",
         description: initialData.description || "",
         price: Number.parseFloat(initialData.price) || 0,
         compareAtPrice: initialData.compare_at_price ? Number.parseFloat(initialData.compare_at_price) : undefined,
@@ -154,13 +154,13 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
         barcode: initialData.barcode || "",
         weight: initialData.weight,
         weight_unit: initialData.weight_unit || "kg",
-        inventory: initialData.inventory,
-        status: initialData.status || "draft",
+        inventory: initialData.inventory || initialData.stock_quantity || 0,
+        status: initialData.status || (initialData.active ? "active" : "draft"),
         vendor_id: initialData.vendor_id,
         product_type_id: initialData.product_type_id,
         shop_location_id: initialData.shop_location_id,
         category_id: initialData.category_id,
-        sub_category_id: initialData.sub_category_id,
+        sub_category_id: initialData.sub_category_id || initialData.subcategory_id,
         listing_type_id: initialData.listing_type_id,
       })
     }
@@ -431,6 +431,9 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
       const payload = {
         product: {
           ...data,
+          // Map frontend field names to backend field names
+          name: data.title, // Backend expects 'name' but frontend uses 'title'
+          compare_at_price: data.compareAtPrice, // Map compareAtPrice to compare_at_price
           option_types_attributes: formattedOptions,
           variants_attributes: formattedVariants,
         },

@@ -5,6 +5,8 @@ class OptionType < ApplicationRecord
   validates :name, uniqueness: { scope: :product_id }
   validates :values, presence: true
 
+  before_save :set_position, if: :new_record?
+
   scope :active, -> { where(active: true) }
   scope :inactive, -> { where(active: false) }
 
@@ -27,5 +29,13 @@ class OptionType < ApplicationRecord
 
   def has_value?(value)
     values.include?(value)
+  end
+
+  private
+
+  def set_position
+    return if position > 0
+    max_position = product.option_types.maximum(:position) || 0
+    self.position = max_position + 1
   end
 end 

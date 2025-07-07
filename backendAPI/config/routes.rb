@@ -32,6 +32,13 @@ Rails.application.routes.draw do
           
           # Option Type routes (nested under products)
           resources :option_types
+          
+          # Variant routes (nested under products)
+          resources :variants do
+            collection do
+              put 'bulk_update'
+            end
+          end
         end
 
         # Vendor routes

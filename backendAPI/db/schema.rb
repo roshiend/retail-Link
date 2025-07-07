@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_03_20_000014) do
+ActiveRecord::Schema[8.0].define(version: 2024_03_20_000015) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -179,6 +179,23 @@ ActiveRecord::Schema[8.0].define(version: 2024_03_20_000014) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  create_table "variants", force: :cascade do |t|
+    t.bigint "product_id", null: false
+    t.string "sku", null: false
+    t.decimal "price", precision: 10, scale: 2, null: false
+    t.integer "quantity", default: 0
+    t.string "option1"
+    t.string "option2"
+    t.string "option3"
+    t.integer "position", default: 0
+    t.boolean "active", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_id", "position"], name: "index_variants_on_product_id_and_position"
+    t.index ["product_id", "sku"], name: "index_variants_on_product_id_and_sku", unique: true
+    t.index ["product_id"], name: "index_variants_on_product_id"
+  end
+
   create_table "vendors", force: :cascade do |t|
     t.bigint "shop_id", null: false
     t.string "name", null: false
@@ -210,5 +227,6 @@ ActiveRecord::Schema[8.0].define(version: 2024_03_20_000014) do
   add_foreign_key "shop_locations", "shops"
   add_foreign_key "subcategories", "categories"
   add_foreign_key "subcategories", "shops"
+  add_foreign_key "variants", "products"
   add_foreign_key "vendors", "shops"
 end

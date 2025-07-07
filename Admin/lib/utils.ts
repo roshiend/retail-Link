@@ -43,6 +43,17 @@ export function isValidUrl(url: string) {
   }
 }
 
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: number | null = null
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout)
+    timeout = window.setTimeout(() => func(...args), wait)
+  }
+}
+
 export function getInitials(name: string) {
   const words = name.split(" ")
   const initials = words.map((word) => word[0]).join("")
