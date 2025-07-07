@@ -12,16 +12,20 @@ module Api
       end
 
       def create
+        Rails.logger.info "Creating product with params: #{product_params}"
+        
         product = current_shop.products.build(product_params)
         
-        # Set positions for option types
-        set_option_type_positions(product)
-        
         if product.save
-          # After save, the model will handle variant management automatically
+          # After save, the model will handle variant management and positioning automatically
           render json: product_with_associations(product), status: :created
         else
-          render json: { errors: product.errors.full_messages }, status: :unprocessable_entity
+          Rails.logger.error "Product creation failed: #{product.errors.full_messages}"
+          render json: { 
+            errors: product.errors.full_messages,
+            details: product.errors.details,
+            validation_errors: product.errors.to_hash
+          }, status: :unprocessable_entity
         end
       end
 
@@ -33,11 +37,8 @@ module Api
         # Store original option types for comparison
         original_option_types = product.option_types.map { |ot| { name: ot.name, values: ot.values } }
         
-        # Set positions for option types
-        set_option_type_positions(product)
-        
         if product.update(product_params)
-          # After update, the model will handle variant management automatically
+          # After update, the model will handle variant management and positioning automatically
           # Log what changed for debugging
           new_option_types = product.option_types.map { |ot| { name: ot.name, values: ot.values } }
           Rails.logger.info "Option types changed: #{original_option_types != new_option_types}"
@@ -68,15 +69,15 @@ module Api
 
       def product_params
         params.require(:product).permit(
-          :name, :description, :price, :compare_at_price, :sku, :barcode, :weight, :weight_unit,
-          :inventory, :status, :vendor_id, :product_type_id, :shop_location_id,
-          :category_id, :subcategory_id, :listing_type_id, :active,
+          :name, :description, :price, :sku, :stock_quantity, :image_url, :active,
+          :vendor_id, :product_type_id, :shop_location_id,
+          :category_id, :subcategory_id, :listing_type_id,
           option_types_attributes: [
-            :id, :name, :_destroy,
+            :id, :name, :position, :_destroy,
             values: []
           ],
           variants_attributes: [
-            :id, :sku, :price, :compare_at_price, :quantity, :option1, :option2, :option3, :active, :_destroy
+            :id, :sku, :price, :quantity, :option1, :option2, :option3, :position, :active, :_destroy
           ]
         )
       end
@@ -90,12 +91,7 @@ module Api
         )
       end
 
-      def set_option_type_positions(product)
-        # Set positions for option types only
-        product.option_types.each_with_index do |option_type, index|
-          option_type.position = index + 1
-        end
-      end
+
     end
   end
 end 

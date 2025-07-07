@@ -377,18 +377,14 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
       const formattedOptions = options
         .filter((option) => option.type && option.values.some((v) => v.trim() !== ""))
         .map((option) => {
-          // Format values as objects with value and _destroy properties
+          // Format values as array of strings (backend expects this)
           const formattedValues = option.values
             .filter((v: string) => v.trim() !== "")
-            .map((value: string) => ({
-              value: value,
-              _destroy: false,
-            }))
+            .map((value: string) => value)
 
           return {
             name: option.type,
             values: formattedValues,
-            position: 1, // Add position since it's in the permitted params
           }
         })
 
@@ -430,10 +426,19 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
       // Prepare the complete payload
       const payload = {
         product: {
-          ...data,
           // Map frontend field names to backend field names
           name: data.title, // Backend expects 'name' but frontend uses 'title'
-          compare_at_price: data.compareAtPrice, // Map compareAtPrice to compare_at_price
+          description: data.description,
+          price: data.price,
+          sku: data.sku,
+          stock_quantity: data.inventory || 0,
+          active: data.status === 'active',
+          vendor_id: data.vendor_id,
+          product_type_id: data.product_type_id,
+          shop_location_id: data.shop_location_id,
+          category_id: data.category_id,
+          subcategory_id: data.sub_category_id, // Map sub_category_id to subcategory_id
+          listing_type_id: data.listing_type_id,
           option_types_attributes: formattedOptions,
           variants_attributes: formattedVariants,
         },

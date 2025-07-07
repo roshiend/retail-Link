@@ -74,6 +74,7 @@ ActiveRecord::Schema[8.0].define(version: 2024_03_20_000015) do
     t.string "name", null: false
     t.string "values", default: [], array: true
     t.boolean "active", default: true
+    t.integer "position", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["product_id", "name"], name: "index_option_types_on_product_id_and_name", unique: true

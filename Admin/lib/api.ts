@@ -29,6 +29,8 @@ interface Product {
   shop_id: number;
   created_at: string;
   updated_at: string;
+  option_types?: OptionType[];
+  variants?: Variant[];
 }
 
 interface LoginCredentials {
@@ -67,6 +69,19 @@ interface OptionType {
   id: number;
   name: string;
   values: string[];
+  position?: number;
+}
+
+interface Variant {
+  id: number;
+  sku: string;
+  price: number;
+  quantity: number;
+  option1?: string;
+  option2?: string;
+  option3?: string;
+  position?: number;
+  active: boolean;
 }
 
 export const api = {

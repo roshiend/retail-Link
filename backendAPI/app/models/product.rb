@@ -20,7 +20,7 @@ class Product < ApplicationRecord
   validate :option_type_consistency
   
   before_validation :generate_sku, on: :create
-  before_save :manage_variants_on_option_changes
+  after_save :manage_variants_on_option_changes
   after_save :ensure_default_variant
 
   scope :active, -> { where(active: true) }
@@ -187,6 +187,7 @@ class Product < ApplicationRecord
 
   def option_type_consistency
     return unless option_types.any?
+    return if new_record? # Skip validation during creation
     
     # Check that all variants have the correct number of options
     expected_option_count = option_types.count
@@ -201,7 +202,13 @@ class Product < ApplicationRecord
   end
 
   def manage_variants_on_option_changes
+    Rails.logger.info "Managing variants on option changes for product #{id}"
     return unless option_types.any?
+    
+    # Only run this if we have option types and they're properly saved
+    return unless option_types.all?(&:persisted?)
+    
+    Rails.logger.info "Option types are persisted, managing variants"
     
     # Remove invalid variants first
     remove_invalid_variants
@@ -212,13 +219,17 @@ class Product < ApplicationRecord
     # Update positions
     variants.each_with_index do |variant, index|
       variant.position = index + 1
+      variant.save! if variant.changed?
     end
+    
+    Rails.logger.info "Variant management completed. Total variants: #{variants.count}"
   end
 
   def ensure_default_variant
     return if variants.any?
+    return if option_types.any? # Don't create default variant if we have option types
     
-    # Create a default variant if no variants exist
+    # Create a default variant if no variants exist and no option types
     variants.create!(
       sku: sku,
       price: price,
