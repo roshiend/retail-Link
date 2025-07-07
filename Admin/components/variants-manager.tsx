@@ -177,7 +177,7 @@ export function VariantsManager({
       if (!option.type) return
 
       const unusedForOption = option.values.filter(
-        (value) => value.trim() !== "" && !usedValues[option.type].has(value),
+        (value) => value && typeof value === 'string' && value.trim() !== "" && !usedValues[option.type].has(value),
       )
 
       if (unusedForOption.length > 0) {
@@ -212,7 +212,7 @@ export function VariantsManager({
     // If no options exist, add the first option
     if (options.length === 0) {
       setOptions([{ type: "", values: [""] }])
-    } else if (options.some((option) => option.type && option.values.some((value) => value.trim() !== ""))) {
+    } else if (options.some((option) => option.type && option.values.some((value) => value && typeof value === 'string' && value.trim() !== ""))) {
       // If we have valid options with values, open the dialog
       setIsAddVariantDialogOpen(true)
     } else {
@@ -282,7 +282,7 @@ export function VariantsManager({
     }
 
     // Check if this value is used in any variants
-    if (valueToRemove.trim() !== "") {
+    if (valueToRemove && typeof valueToRemove === 'string' && valueToRemove.trim() !== "") {
       const isValueUsed = variants.some((variant) =>
         variant.options.some((opt) => opt.name === newOptions[optionIndex].type && opt.value === valueToRemove),
       )
@@ -309,7 +309,7 @@ export function VariantsManager({
       .filter((option) => option.type !== "")
       .map((option) => ({
         ...option,
-        values: option.values.filter((value) => value.trim() !== ""),
+        values: option.values.filter((value) => value && typeof value === 'string' && value.trim() !== ""),
       }))
       .filter((option) => option.values.length > 0)
 
@@ -561,8 +561,8 @@ export function VariantsManager({
 
               <div className="flex-1 flex flex-wrap gap-2">
                 {option.values.map((value, valueIndex) => {
-                  const isLastEmptyField =
-                    valueIndex === option.values.length - 1 && value === "" && option.values.some((v) => v !== "")
+                        const isLastEmptyField =
+        valueIndex === option.values.length - 1 && value === "" && option.values.some((v) => v && v !== "")
 
                   const showDeleteButton = value !== "" || option.values.length > 1
 
@@ -660,7 +660,7 @@ export function VariantsManager({
                           </SelectTrigger>
                           <SelectContent>
                             {option.values
-                              .filter((value) => value.trim() !== "")
+                              .filter((value) => value && typeof value === 'string' && value.trim() !== "")
                               .map((value, i) => (
                                 <SelectItem key={i} value={value}>
                                   {value}

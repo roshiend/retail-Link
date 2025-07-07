@@ -171,7 +171,7 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
     isEditing && initialData.option_types
       ? initialData.option_types.map((ot: any) => ({
           type: ot.name,
-          values: ot.values.map((v: any) => v.value),
+          values: ot.values || [],
         }))
       : []
 
@@ -376,16 +376,26 @@ export function ProductForm({ initialData, shopId }: ProductFormProps = {}) {
       // Format option types to match backend structure
       const formattedOptions = options
         .filter((option) => option.type && option.values.some((v) => v.trim() !== ""))
-        .map((option) => {
+        .map((option, index) => {
           // Format values as array of strings (backend expects this)
           const formattedValues = option.values
             .filter((v: string) => v.trim() !== "")
             .map((value: string) => value)
 
-          return {
+          const optionData: any = {
             name: option.type,
             values: formattedValues,
           }
+
+          // If editing and this option type exists in initialData, include the ID
+          if (isEditing && initialData.option_types) {
+            const existingOptionType = initialData.option_types.find((ot: any) => ot.name === option.type)
+            if (existingOptionType) {
+              optionData.id = existingOptionType.id
+            }
+          }
+
+          return optionData
         })
 
       // Format variants to match backend structure
