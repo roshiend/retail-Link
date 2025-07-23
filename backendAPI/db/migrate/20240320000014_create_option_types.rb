@@ -5,7 +5,6 @@ class CreateOptionTypes < ActiveRecord::Migration[8.0]
       t.string :name, null: false
       t.string :values, array: true, default: []
       t.boolean :active, default: true
-      t.integer :position, default: 0
 
       t.timestamps
     end

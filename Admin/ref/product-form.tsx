@@ -300,7 +300,7 @@ export default function Component() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" suppressHydrationWarning>
+    <div className="min-h-screen bg-gray-50">
       {/* Fixed Header Bar */}
       <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3">
@@ -320,7 +320,9 @@ export default function Component() {
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </span>
               )}
-              {saveStatus && <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">{saveStatus}</span>}
+              {saveStatus && (
+                <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">{saveStatus}</span>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -558,7 +560,6 @@ export default function Component() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="w-full h-8 text-xs"
-                    suppressHydrationWarning
                   />
                 </div>
 
@@ -1699,11 +1700,16 @@ export default function Component() {
                       className="h-8 text-xs px-3"
                     >
                       Add
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addTag(tagInput)}
+                      disabled={!tagInput.trim()}
+                      className="h-8 text-xs px-3"
+                    >
+                      Add
                     </Button>
                   </div>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Press Enter or click Add to add a tag. Use commas to separate multiple tags.
                 </div>
               </CardContent>
             </Card>
@@ -1711,5 +1717,5 @@ export default function Component() {
         </div>
       </div>
     </div>
-  )
+  )\
 }
